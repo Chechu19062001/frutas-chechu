@@ -3,78 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frutas Chechu - Estilo Urbano</title>
+    <title>Proyecto Chechu - Trap Edition</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <header>
-        <div class="splash splash-1"></div>
-        <div class="splash splash-2"></div>
-        <div class="splash splash-3"></div>
-        <div class="container">
-            <div class="logo">
-                <i class="fas fa-seedling"></i>
-                <h1 data-text="Frutas Chechu">Frutas Chechu</h1>
-            </div>
-            <p>Tu huerto urbano de confianza</p>
-        </div>
-    </header>
+    <!-- Overlay para el fondo -->
+    <div class="background-overlay"></div>
     
-    <main class="container">
-        <div class="intro-message">
-            <div class="icon-container">
-                <i class="fas fa-apple-alt"></i>
+    <!-- Pantalla de Login/Registro -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <i class="fas fa-cannabis pulse"></i>
+                <h1>PROYECTO<span>CHECHU</span></h1>
             </div>
-            <h2>Descubre nuestras frutas ex�ticas</h2>
-            <p>Cultivadas con amor y respeto por la naturaleza</p>
-        </div>
-
-        <div class="filters">
-            <button class="filter-btn active" data-filter="all">
-                <i class="fas fa-border-all"></i> Todas
-            </button>
-            <button class="filter-btn" data-filter="disponible">
-                <i class="fas fa-check-circle"></i> Disponibles
-            </button>
-            <button class="filter-btn" data-filter="no-disponible">
-                <i class="fas fa-times-circle"></i> No Disponibles
-            </button>
-        </div>
-
-        <div class="search-container">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="search-input" placeholder="Buscar fruta...">
-        </div>
-        
-        <div id="producto-container" class="productos">
-            <!-- Los productos se cargar�n din�micamente desde JavaScript -->
             
-            <!-- Mensaje de no productos -->
-            <div id="no-productos" class="empty-state" style="display: none;">
-                <i class="fas fa-leaf"></i>
-                <p>No hay productos que mostrar.</p>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">LOGIN</button>
+                <button class="auth-tab" data-tab="register">REGISTRO</button>
             </div>
-        </div>
-    </main>
-
-    <footer>
-        <div class="footer-design"></div>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <p><i class="fas fa-copyright"></i> 2025 Frutas Chechu. Todos los derechos reservados.</p>
-                    <p><i class="fas fa-map-marker-alt"></i> Calle Naturaleza, 123</p>
-                    <p><i class="fas fa-phone"></i> (123) 456-7890</p>
+            
+            <div id="loginForm" class="auth-form active">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="loginUsername" placeholder="Usuario" required>
                 </div>
-                <a href="admin.html" class="admin-link">
-                    <i class="fas fa-user-lock"></i> Administraci�n
-                </a>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                </div>
+                <button id="loginButton" class="btn-auth">ENTRAR <i class="fas fa-arrow-right"></i></button>
+            </div>
+            
+            <div id="registerForm" class="auth-form">
+                <div class="input-group">
+                    <i class="fas fa-user-plus"></i>
+                    <input type="text" id="registerUsername" placeholder="Nuevo Usuario" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="registerPassword" placeholder="Contraseña" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-check-double"></i>
+                    <input type="password" id="confirmPassword" placeholder="Confirmar Contraseña" required>
+                </div>
+                <button id="registerButton" class="btn-auth">REGISTRARSE <i class="fas fa-user-check"></i></button>
             </div>
         </div>
-    </footer>
+    </div>
 
-    <!-- Script principal -->
+    <!-- App Principal -->
+    <div id="appContent" class="hidden">
+        <header>
+            <div class="header-left">
+                <i class="fas fa-cannabis pulse"></i>
+                <h1>PROYECTO<span>CHECHU</span></h1>
+            </div>
+            <div class="header-right">
+                <span id="usernameDisplay"></span>
+                <button id="logoutBtn" class="btn-small"><i class="fas fa-sign-out-alt"></i> SALIR</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-leaf"></i> SELECCIONA PRODUCTOS</h2>
+                </div>
+                
+                <div class="product-selector">
+                    <div class="product-category">
+                        <h3><i class="fas fa-flask"></i> ABONO BASE</h3>
+                        <div class="product-options" data-category="abono">
+                            <label class="product-option">
+                                <input type="radio" name="abono" value="Bio Bloom">
+                                <span class="product-icon"><i class="fas fa-seedling"></i></span>
+                                <span>Bio Bloom</span>
+                            </label>
+                            <label class="product-option">
+                                <input type="radio" name="abono" value="Flora Nova Lila">
+                                <span class="product-icon"><i class="fas fa-vial"></i></span>
+                                <span>Flora Nova Lila</span>
+                            </label>
+                        </div>
+                        <button class="btn-add-custom" data-category="abono">+ CUSTOM</button>
+                    </div>
+
+                    <div class="product-category">
+                        <h3><i class="fas fa-candy-cane"></i> AZÚCARES</h3>
+                        <div class="product-options" data-category="azucar">
+                            <label class="product-option">
+                                <input type="radio" name="azucar" value="Bud Candy">
+                                <span class="product-icon"><i class="fas fa-cannabis"></i></span>
+                                <span>Bud Candy</span>
+                            </label>
+                            <label class="product-option">
+                                <input type="radio" name="azucar" value="Carboload">
+                                <span class="product-icon"><i class="fas fa-atom"></i></span>
+                                <span>Carboload</span>
+                            </label>
+                            <label class="product-option">
+                                <input type="radio" name="azucar" value="Sugar Shot">
+                                <span class="product-icon"><i class="fas fa-tint"></i></span>
+                                <span>Sugar Shot</span>
+                            </label>
+                            <label class="product-option">
+                                <input type="radio" name="azucar" value="Top Candy">
+                                <span class="product-icon"><i class="fas fa-certificate"></i></span>
+                                <span>Top Candy</span>
+                            </label>
+                        </div>
+                        <button class="btn-add-custom" data-category="azucar">+ CUSTOM</button>
+                    </div>
+
+                    <div class="product-category">
+                        <h3><i class="fas fa-bolt"></i> ESTIMULADOR</h3>
+                        <div class="product-options" data-category="estimulador">
+                            <label class="product-option">
+                                <input type="radio" name="estimulador" value="Top Max">
+                                <span class="product-icon"><i class="fas fa-fire"></i></span>
+                                <span>Top Max</span>
+                            </label>
+                            <label class="product-option">
+                                <input type="radio" name="estimulador" value="Bloombastic">
+                                <span class="product-icon"><i class="fas fa-bomb"></i></span>
+                                <span>Bloombastic</span>
+                            </label>
+                        </div>
+                        <button class="btn-add-custom" data-category="estimulador">+ CUSTOM</button>
+                    </div>
+
+                    <div class="product-category">
+                        <h3><i class="fas fa-expand-alt"></i> AUMENTA TAMAÑO</h3>
+                        <div class="product-options" data-category="tamano">
+                            <label class="product-option">
+                                <input type="radio" name="tamano" value="Monster Bloom">
+                                <span class="product-icon"><i class="fas fa-skull"></i></span>
+                                <span>Monster Bloom</span>
+                            </label>
+                            <label class="product-option">
+                                <input type="radio" name="tamano" value="Blossom Builder">
+                                <span class="product-icon"><i class="fas fa-mountain"></i></span>
+                                <span>Blossom Builder</span>
+                            </label>
+                        </div>
+                        <button class="btn-add-custom" data-category="tamano">+ CUSTOM</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="createTableBtn" class="btn glow-btn">
+                        <i class="fas fa-table"></i> CREAR TABLA
+                    </button>
+                    <button id="showSavedTablesBtn" class="btn">
+                        <i class="fas fa-save"></i> MIS TABLAS
+                    </button>
+                </div>
+            </div>
+
+            <div id="tableCard" class="card hidden">
+                <div class="card-header">
+                    <h2><i class="fas fa-table"></i> TU TABLA DE ABONADO</h2>
+                </div>
+                <div class="input-group table-name">
+                    <i class="fas fa-tag"></i>
+                    <input type="text" id="tableNameInput" placeholder="Nombre de tu tabla" required>
+                </div>
+                
+                <div class="table-container">
+                    <table id="dosageTable">
+                        <thead>
+                            <tr>
+                                <th>PRODUCTO</th>
+                                <th>SEM 1</th>
+                                <th>SEM 2</th>
+                                <th>SEM 3</th>
+                                <th>SEM 4</th>
+                                <th>SEM 5</th>
+                                <th>SEM 6</th>
+                                <th>SEM 7</th>
+                                <th>SEM 8</th>
+                                <th>SEM 9</th>
+                                <th>SEM 10</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Filas de la tabla se generan dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="saveTableBtn" class="btn glow-btn">
+                        <i class="fas fa-save"></i> GUARDAR
+                    </button>
+                    <button id="createNewTableBtn" class="btn">
+                        <i class="fas fa-plus-circle"></i> NUEVA TABLA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para notas -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-sticky-note"></i> NOTAS - SEMANA <span id="weekNumber"></span></h2>
+                <span class="close"><i class="fas fa-times"></i></span>
+            </div>
+            <textarea id="weekNotes" rows="8" placeholder="Escribe tus anotaciones para esta semana..."></textarea>
+            <button id="saveNotesBtn" class="btn glow-btn">
+                <i class="fas fa-save"></i> GUARDAR NOTAS
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal para tablas guardadas -->
+    <div id="savedTablesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-database"></i> MIS TABLAS GUARDADAS</h2>
+                <span class="close"><i class="fas fa-times"></i></span>
+            </div>
+            <div id="savedTablesList" class="saved-tables">
+                <!-- Las tablas guardadas se mostrarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para añadir producto personalizado -->
+    <div id="customProductModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> AÑADIR PRODUCTO PERSONALIZADO</h2>
+                <span class="close"><i class="fas fa-times"></i></span>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-tag"></i>
+                <input type="text" id="customProductName" placeholder="Nombre del producto" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-list"></i>
+                <select id="customProductCategory">
+                    <option value="">Selecciona categoría</option>
+                    <option value="abono">Abono Base</option>
+                    <option value="azucar">Azúcares</option>
+                    <option value="estimulador">Estimulador</option>
+                    <option value="tamano">Aumenta Tamaño</option>
+                </select>
+            </div>
+            <button id="saveCustomProductBtn" class="btn glow-btn">
+                <i class="fas fa-check-circle"></i> AÑADIR PRODUCTO
+            </button>
+        </div>
+    </div>
+
+    <!-- Script -->
     <script src="script.js"></script>
 </body>
 </html>
