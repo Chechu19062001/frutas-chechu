@@ -12,6 +12,12 @@ const DB = {
     saveTables(tables) {
         localStorage.setItem('tables', JSON.stringify(tables));
     },
+    getPublicTables() {
+        return JSON.parse(localStorage.getItem('publicTables') || '[]');
+    },
+    savePublicTables(publicTables) {
+        localStorage.setItem('publicTables', JSON.stringify(publicTables));
+    },
     getCurrentUser() {
         return localStorage.getItem('currentUser');
     },
@@ -278,7 +284,8 @@ document.getElementById('saveTableBtn').addEventListener('click', () => {
         name: tableName,
         author: DB.getCurrentUser(),
         date: new Date().toISOString(),
-        products
+        products,
+        isPublic: false
     };
     
     const tables = DB.getTables();
@@ -303,23 +310,221 @@ document.getElementById('showSavedTablesBtn').addEventListener('click', () => {
     } else {
         userTables.forEach(table => {
             const tableCard = document.createElement('div');
-            tableCard.className = 'card';
+            tableCard.className = 'card table-card';
+            const publicStatus = table.isPublic ? 
+                '<span class="public-badge"><i class="fas fa-globe"></i> Pública</span>' : '';
+            
             tableCard.innerHTML = `
-                <h3>${table.name}</h3>
+                <h3>${table.name} ${publicStatus}</h3>
                 <p>Creada: ${new Date(table.date).toLocaleDateString()}</p>
-                <button class="btn" data-table-id="${table.id}">Ver tabla</button>
+                <div class="table-card-actions">
+                    <button class="btn btn-view" data-table-id="${table.id}">
+                        <i class="fas fa-eye"></i> Ver
+                    </button>
+                    <button class="btn btn-edit" data-table-id="${table.id}">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button class="btn btn-delete" data-table-id="${table.id}">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                    <button class="btn ${table.isPublic ? 'btn-unpublish' : 'btn-publish'}" data-table-id="${table.id}">
+                        <i class="fas ${table.isPublic ? 'fa-lock' : 'fa-globe'}"></i> 
+                        ${table.isPublic ? 'Despublicar' : 'Publicar'}
+                    </button>
+                </div>
             `;
             
-            tableCard.querySelector('button').addEventListener('click', () => {
-                displayTableInModal(table);
-            });
-            
             savedTablesList.appendChild(tableCard);
+        });
+        
+        // Agregar event listeners a los botones
+        document.querySelectorAll('.btn-view').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tableId = btn.dataset.tableId;
+                const table = tables.find(t => t.id === tableId);
+                if (table) {
+                    displayTableInModal(table);
+                }
+            });
+        });
+        
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tableId = btn.dataset.tableId;
+                const table = tables.find(t => t.id === tableId);
+                if (table) {
+                    openTableForEditing(table);
+                }
+            });
+        });
+        
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tableId = btn.dataset.tableId;
+                deleteTable(tableId);
+            });
+        });
+        
+        document.querySelectorAll('.btn-publish, .btn-unpublish').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tableId = btn.dataset.tableId;
+                toggleTablePublicStatus(tableId);
+            });
         });
     }
     
     document.getElementById('savedTablesModal').style.display = 'flex';
 });
+
+// Función para abrir tabla para edición
+function openTableForEditing(table) {
+    document.getElementById('editTableNameInput').value = table.name;
+    
+    const editTableBody = document.getElementById('editTableBody');
+    editTableBody.innerHTML = '';
+    
+    table.products.forEach(product => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.product}</td>
+            ${product.doses.map((dose, idx) => `
+                <td contenteditable="true" 
+                    data-week="${idx+1}" 
+                    data-product="${product.product}" 
+                    class="editable-cell">
+                    ${dose || ''}
+                </td>
+            `).join('')}
+        `;
+        editTableBody.appendChild(row);
+    });
+    
+    // Guardar ID de la tabla que se está editando
+    document.getElementById('editTableModal').dataset.tableId = table.id;
+    
+    // Mostrar modal
+    document.getElementById('savedTablesModal').style.display = 'none';
+    document.getElementById('editTableModal').style.display = 'flex';
+}
+
+// Guardar cambios en tabla editada
+document.getElementById('updateTableBtn').addEventListener('click', () => {
+    const tableId = document.getElementById('editTableModal').dataset.tableId;
+    const tableName = document.getElementById('editTableNameInput').value.trim();
+    
+    if (!tableName) {
+        showNotification('Dale un nombre a tu tabla');
+        return;
+    }
+    
+    const products = [];
+    document.querySelectorAll('#editTableBody tr').forEach(row => {
+        const product = row.cells[0].textContent;
+        const doses = [];
+        
+        for (let i = 1; i <= 10; i++) {
+            doses.push(row.cells[i].textContent);
+        }
+        
+        products.push({ product, doses });
+    });
+    
+    // Actualizar tabla
+    const tables = DB.getTables();
+    const tableIndex = tables.findIndex(t => t.id === tableId);
+    
+    if (tableIndex !== -1) {
+        // Mantener estado público y fecha de creación original
+        const isPublic = tables[tableIndex].isPublic;
+        const originalDate = tables[tableIndex].date;
+        
+        tables[tableIndex] = {
+            id: tableId,
+            name: tableName,
+            author: DB.getCurrentUser(),
+            date: originalDate,
+            products,
+            isPublic
+        };
+        
+        DB.saveTables(tables);
+        
+        // Actualizar tablas públicas si es necesario
+        if (isPublic) {
+            const publicTables = DB.getPublicTables();
+            const publicIndex = publicTables.findIndex(t => t.id === tableId);
+            if (publicIndex !== -1) {
+                publicTables[publicIndex] = tables[tableIndex];
+                DB.savePublicTables(publicTables);
+            }
+        }
+        
+        showNotification('¡Tabla actualizada correctamente!');
+        document.getElementById('editTableModal').style.display = 'none';
+    }
+});
+
+// Cancelar edición
+document.getElementById('cancelEditBtn').addEventListener('click', () => {
+    document.getElementById('editTableModal').style.display = 'none';
+    document.getElementById('savedTablesModal').style.display = 'flex';
+});
+
+// Eliminar tabla
+function deleteTable(tableId) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta tabla?')) {
+        let tables = DB.getTables();
+        
+        // Verificar si la tabla es pública para eliminarla también de ahí
+        const tableToDelete = tables.find(t => t.id === tableId);
+        if (tableToDelete && tableToDelete.isPublic) {
+            let publicTables = DB.getPublicTables();
+            publicTables = publicTables.filter(t => t.id !== tableId);
+            DB.savePublicTables(publicTables);
+        }
+        
+        // Eliminar de tablas personales
+        tables = tables.filter(t => t.id !== tableId);
+        DB.saveTables(tables);
+        
+        showNotification('Tabla eliminada correctamente');
+        
+        // Refrescar lista de tablas
+        document.getElementById('showSavedTablesBtn').click();
+    }
+}
+
+// Cambiar estado público/privado de una tabla
+function toggleTablePublicStatus(tableId) {
+    const tables = DB.getTables();
+    const tableIndex = tables.findIndex(t => t.id === tableId);
+    
+    if (tableIndex !== -1) {
+        // Cambiar estado
+        tables[tableIndex].isPublic = !tables[tableIndex].isPublic;
+        
+        // Actualizar en localStorage
+        DB.saveTables(tables);
+        
+        // Actualizar lista de tablas públicas
+        let publicTables = DB.getPublicTables();
+        
+        if (tables[tableIndex].isPublic) {
+            // Añadir a públicas
+            publicTables.push(tables[tableIndex]);
+            showNotification('Tabla publicada correctamente');
+        } else {
+            // Quitar de públicas
+            publicTables = publicTables.filter(t => t.id !== tableId);
+            showNotification('Tabla retirada del espacio público');
+        }
+        
+        DB.savePublicTables(publicTables);
+        
+        // Refrescar lista de tablas
+        document.getElementById('showSavedTablesBtn').click();
+    }
+}
 
 // Mostrar tabla en modal
 function displayTableInModal(tableData) {
@@ -333,49 +538,83 @@ function displayTableInModal(tableData) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${product.product}</td>
-            ${product.doses.map(dose => `<td>${dose}</td>`).join('')}
+            ${product.doses.map(dose => `<td>${dose || ''}</td>`).join('')}
         `;
         tableBody.appendChild(row);
     });
     
-    document.getElementById('savedTablesModal').style.display = 'none';
+    // Si estamos viendo una tabla pública y no es nuestra, mostrar botón de copiar
+    const currentUser = DB.getCurrentUser();
+    const isMine = tableData.author === currentUser;
+    
+    document.getElementById('copyToMyTablesBtn').style.display = isMine ? 'none' : 'block';
+    document.getElementById('viewTableModal').dataset.tableId = tableData.id;
+    
+    // Ocultar modales anteriores y mostrar este
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+    });
     document.getElementById('viewTableModal').style.display = 'flex';
 }
 
-// Compartir tabla
-document.getElementById('shareTableBtn').addEventListener('click', () => {
-    const tableName = document.getElementById('tableNameInput').value.trim();
-    if (!tableName) {
-        showNotification('Guarda la tabla antes de compartirla');
-        return;
+// Manejar el botón de tablas públicas
+document.getElementById('publicTablesBtn').addEventListener('click', () => {
+    const publicTables = DB.getPublicTables();
+    const publicTablesList = document.getElementById('publicTablesList');
+    
+    publicTablesList.innerHTML = '';
+    
+    if (publicTables.length === 0) {
+        publicTablesList.innerHTML = '<p class="text-muted">No hay tablas publicadas</p>';
+    } else {
+        publicTables.forEach(table => {
+            const tableCard = document.createElement('div');
+            tableCard.className = 'card table-card';
+            tableCard.innerHTML = `
+                <h3>${table.name}</h3>
+                <p>Autor: ${table.author}</p>
+                <p>Creada: ${new Date(table.date).toLocaleDateString()}</p>
+                <div class="table-card-actions">
+                    <button class="btn btn-view" data-table-id="${table.id}">
+                        <i class="fas fa-eye"></i> Ver tabla
+                    </button>
+                </div>
+            `;
+            
+            tableCard.querySelector('.btn-view').addEventListener('click', () => {
+                displayTableInModal(table);
+            });
+            
+            publicTablesList.appendChild(tableCard);
+        });
     }
     
-    // Generar enlace simulado
-    const shareLink = `https://proyectochechu.com/share/${generateID()}`;
-    document.getElementById('shareLink').value = shareLink;
-    document.getElementById('shareTableModal').style.display = 'flex';
+    document.getElementById('publicTablesModal').style.display = 'flex';
 });
 
-document.getElementById('shareViewTableBtn').addEventListener('click', () => {
-    const shareLink = `https://proyectochechu.com/share/${generateID()}`;
-    document.getElementById('shareLink').value = shareLink;
-    document.getElementById('viewTableModal').style.display = 'none';
-    document.getElementById('shareTableModal').style.display = 'flex';
-});
-
-// Copiar enlace
-document.getElementById('copyLinkBtn').addEventListener('click', () => {
-    const shareLink = document.getElementById('shareLink');
-    shareLink.select();
-    document.execCommand('copy');
-    showNotification('Enlace copiado al portapapeles');
-});
-
-// Compartir por WhatsApp
-document.getElementById('shareWhatsAppBtn').addEventListener('click', () => {
-    const shareLink = document.getElementById('shareLink').value;
-    const whatsappURL = `https://wa.me/?text=¡Mira mi tabla de abonado en Proyecto Chechu! ${encodeURIComponent(shareLink)}`;
-    window.open(whatsappURL, '_blank');
+// Copiar tabla pública a mis tablas
+document.getElementById('copyToMyTablesBtn').addEventListener('click', () => {
+    const tableId = document.getElementById('viewTableModal').dataset.tableId;
+    const publicTables = DB.getPublicTables();
+    const tableToClone = publicTables.find(t => t.id === tableId);
+    
+    if (tableToClone) {
+        const newTable = {
+            id: generateID(),
+            name: `${tableToClone.name} (copia)`,
+            author: DB.getCurrentUser(),
+            date: new Date().toISOString(),
+            products: JSON.parse(JSON.stringify(tableToClone.products)), // Deep copy
+            isPublic: false
+        };
+        
+        const tables = DB.getTables();
+        tables.push(newTable);
+        DB.saveTables(tables);
+        
+        showNotification('Tabla copiada a tu colección');
+        document.getElementById('viewTableModal').style.display = 'none';
+    }
 });
 
 // Crear nueva tabla
@@ -391,66 +630,6 @@ document.getElementById('createNewTableBtn').addEventListener('click', () => {
     document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
 });
 
-// Buscar usuarios
-document.getElementById('searchUsersBtn').addEventListener('click', () => {
-    const users = Object.keys(DB.getUsers());
-    const usersList = document.getElementById('usersList');
-    usersList.innerHTML = '';
-    
-    users.forEach(username => {
-        if (username !== DB.getCurrentUser()) {
-            const userItem = document.createElement('div');
-            userItem.className = 'user-item';
-            userItem.innerHTML = `
-                <span>${username}</span>
-                <button class="btn-small" data-username="${username}">Ver perfil</button>
-            `;
-            
-            userItem.querySelector('button').addEventListener('click', () => {
-                showUserProfile(username);
-            });
-            
-            usersList.appendChild(userItem);
-        }
-    });
-    
-    document.getElementById('searchUsersModal').style.display = 'flex';
-});
-
-// Mostrar perfil de usuario
-function showUserProfile(username) {
-    document.getElementById('profileUsername').textContent = username;
-    
-    const tables = DB.getTables().filter(table => table.author === username);
-    document.getElementById('userTablesCount').textContent = tables.length;
-    
-    const userTables = document.getElementById('userTables');
-    userTables.innerHTML = '';
-    
-    if (tables.length === 0) {
-        userTables.innerHTML = '<p class="text-muted">Este usuario no tiene tablas compartidas</p>';
-    } else {
-        tables.forEach(table => {
-            const tableCard = document.createElement('div');
-            tableCard.className = 'card';
-            tableCard.innerHTML = `
-                <h3>${table.name}</h3>
-                <p>Creada: ${new Date(table.date).toLocaleDateString()}</p>
-                <button class="btn" data-table-id="${table.id}">Ver tabla</button>
-            `;
-            
-            tableCard.querySelector('button').addEventListener('click', () => {
-                displayTableInModal(table);
-            });
-            
-            userTables.appendChild(tableCard);
-        });
-    }
-    
-    document.getElementById('searchUsersModal').style.display = 'none';
-    document.getElementById('userProfileModal').style.display = 'flex';
-}
-
 // Cerrar modalidades
 document.querySelectorAll('.close').forEach(close => {
     close.addEventListener('click', () => {
@@ -465,14 +644,6 @@ window.addEventListener('click', (e) => {
             modal.style.display = 'none';
         }
     });
-});
-
-// Guardar tabla compartida
-document.getElementById('saveSharedTableBtn').addEventListener('click', () => {
-    // Implementación simplificada - copia la tabla actual
-    const tableName = document.getElementById('viewTableName').textContent + " (copia)";
-    showNotification('Tabla guardada en tu colección');
-    document.getElementById('viewTableModal').style.display = 'none';
 });
 
 // Inicializar datos de ejemplo si es la primera vez
