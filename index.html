@@ -48,8 +48,42 @@
         </div>
         
         <div id="producto-container" class="productos">
-            <!-- Los productos se cargarán dinámicamente aquí -->
-            <div id="no-productos" class="empty-state">
+            <!-- Mandarina Radical -->
+            <div class="producto no-disponible-item" data-disponibilidad="no-disponible" data-id="mandarina-radical">
+                <div class="producto-img-container">
+                    <img src="/api/placeholder/400/300?text=Mandarinas" alt="Mandarina Radical" class="producto-img">
+                </div>
+                <div class="producto-info">
+                    <h3 class="producto-nombre">Mandarina Radical</h3>
+                    <p class="producto-descripcion">Nuestra variedad más jugosa y aromática de mandarina. Perfecta para zumos y postres.</p>
+                    <span class="producto-disponibilidad no-disponible">
+                        <i class="fas fa-times-circle"></i> No disponible
+                    </span>
+                    <button class="reservar-btn" data-id="mandarina-radical">
+                        <i class="fas fa-calendar-check"></i> Reservar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Melones Shimo -->
+            <div class="producto no-disponible-item" data-disponibilidad="no-disponible" data-id="melones-shimo">
+                <div class="producto-img-container">
+                    <img src="/api/placeholder/400/300?text=Melones" alt="Melones Shimo" class="producto-img">
+                </div>
+                <div class="producto-info">
+                    <h3 class="producto-nombre">Melones Shimo</h3>
+                    <p class="producto-descripcion">Melones con sabor intenso a chicle de melón. Una experiencia refrescante de sabor exótico.</p>
+                    <span class="producto-disponibilidad no-disponible">
+                        <i class="fas fa-times-circle"></i> No disponible
+                    </span>
+                    <button class="reservar-btn" data-id="melones-shimo">
+                        <i class="fas fa-calendar-check"></i> Reservar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mensaje de no productos -->
+            <div id="no-productos" class="empty-state" style="display: none;">
                 <i class="fas fa-leaf"></i>
                 <p>No hay productos que mostrar.</p>
             </div>
@@ -77,6 +111,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
 
     <script>
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAfJlzVsMWrqJsgQcnUhwyGs4i2rJ5q9Rs",
             authDomain: "frutas-df54c.firebaseapp.com",
@@ -92,6 +127,14 @@
 
         // Leer frutas de Firestore
         db.collection("frutas").onSnapshot((snapshot) => {
+            const productos = document.querySelectorAll('[data-id]');
+            
+            // Si hay productos en el DOM, no mostramos los de Firebase
+            if (productos.length > 0) {
+                document.getElementById('no-productos').style.display = 'none';
+                return;
+            }
+
             const contenedor = document.querySelector('.productos');
             contenedor.innerHTML = "";
 

@@ -3,16 +3,13 @@
 :root {
     --color-primary: #FF5722;
     --color-primary-dark: #D84315;
-    --color-primary-light: #FFCCBC;
     --color-accent: #FFC107;
-    --color-accent-dark: #FFA000;
     --color-dark: #212121;
     --color-light: #FAFAFA;
     --color-gray: #BDBDBD;
     --color-danger: #F44336;
     --shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
     --text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
-    --tag-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -26,11 +23,8 @@ body {
     line-height: 1.6;
     color: var(--color-dark);
     background-color: #1D1D1D;
-    /* Textura de pared de concreto */
     background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#1D1D1D"/><path d="M0,0 L100,100 M20,0 L100,80 M40,0 L100,60 M60,0 L100,40 M80,0 L100,20 M0,20 L80,100 M0,40 L60,100 M0,60 L40,100 M0,80 L20,100" stroke="#252525" stroke-width="0.5"/></svg>');
     background-size: 200px;
-    background-repeat: repeat;
-    background-attachment: fixed;
 }
 
 .container {
@@ -42,10 +36,9 @@ body {
     z-index: 1;
 }
 
-/* Encabezado con estilo graffiti */
+/* Header */
 header {
     background-color: var(--color-dark);
-    background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="%23212121"/><path d="M0,0 L200,200 M40,0 L200,160 M80,0 L200,120 M120,0 L200,80 M160,0 L200,40 M0,40 L160,200 M0,80 L120,200 M0,120 L80,200 M0,160 L40,200" stroke="%23292929" stroke-width="1"/></svg>');
     color: white;
     padding: 40px 0;
     text-align: center;
@@ -56,7 +49,6 @@ header {
     border-bottom: 8px solid var(--color-primary);
 }
 
-/* Efecto de spray en el header */
 header::before {
     content: "";
     position: absolute;
@@ -83,18 +75,14 @@ header::before {
 .logo i {
     font-size: 3rem;
     color: var(--color-accent);
-    text-shadow: 2px 2px 0 var(--color-primary), 
-                 4px 4px 0 rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 0 var(--color-primary), 4px 4px 0 rgba(0, 0, 0, 0.3);
     transform: rotate(-5deg);
 }
 
 header h1 {
     font-family: 'Permanent Marker', cursive;
     font-size: 3.5rem;
-    font-weight: 700;
-    text-shadow: var(--tag-shadow);
-    margin: 0;
-    letter-spacing: 2px;
+    text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
     color: var(--color-accent);
     position: relative;
     z-index: 1;
@@ -102,7 +90,6 @@ header h1 {
     text-transform: uppercase;
 }
 
-/* Efecto de borde para el título principal */
 header h1::before {
     content: attr(data-text);
     position: absolute;
@@ -115,7 +102,6 @@ header h1::before {
 
 header p {
     font-size: 1.2rem;
-    opacity: 0.9;
     position: relative;
     z-index: 1;
     font-weight: 500;
@@ -123,11 +109,9 @@ header p {
     letter-spacing: 1px;
     color: white;
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
-    max-width: 600px;
-    margin: 0 auto;
 }
 
-/* Elementos decorativos como salpicaduras de spray */
+/* Decorative elements */
 .splash {
     position: absolute;
     background-size: contain;
@@ -145,25 +129,25 @@ header p {
     transform: scale(1.5) rotate(45deg);
 }
 
-.splash-2 {
+.splash-2, .splash-3 {
     width: 250px;
     height: 250px;
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M20,20 Q60,5 100,40 T180,60 Q160,120 100,160 T20,180 Q40,140 20,100 T20,20 Z" fill="%23FFC107" /></svg>');
+}
+
+.splash-2 {
     top: 30%;
     right: 5%;
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M20,20 Q60,5 100,40 T180,60 Q160,120 100,160 T20,180 Q40,140 20,100 T20,20 Z" fill="%23FFC107" /></svg>');
     transform: rotate(-30deg);
 }
 
 .splash-3 {
-    width: 150px;
-    height: 150px;
     bottom: -30px;
     left: 30%;
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M100,100 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0 Z" fill="%23FF5722" /></svg>');
     transform: scale(0.8) rotate(15deg);
 }
 
-/* Mensaje de introducción */
+/* Intro message */
 .intro-message {
     text-align: center;
     margin-bottom: 40px;
@@ -173,29 +157,6 @@ header p {
     box-shadow: var(--shadow);
     border: 3px solid var(--color-primary);
     position: relative;
-}
-
-/* Efecto de borde de cinta adhesiva */
-.intro-message::before,
-.intro-message::after {
-    content: "";
-    position: absolute;
-    background-color: rgba(255, 255, 255, 0.2);
-    height: 20px;
-}
-
-.intro-message::before {
-    top: -10px;
-    left: 30px;
-    right: 30px;
-    transform: rotate(-1deg);
-}
-
-.intro-message::after {
-    bottom: -10px;
-    left: 40%;
-    width: 150px;
-    transform: rotate(2deg);
 }
 
 .icon-container {
@@ -209,7 +170,6 @@ header p {
     margin: 0 auto 20px;
     border: 4px solid white;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    transform: rotate(-5deg);
 }
 
 .icon-container i {
@@ -224,7 +184,6 @@ header p {
     color: var(--color-primary);
     margin-bottom: 15px;
     text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
-    letter-spacing: 1px;
 }
 
 .intro-message p {
@@ -232,7 +191,7 @@ header p {
     font-size: 1.1rem;
 }
 
-/* Filtros con estilo urbano */
+/* Filters */
 .filters {
     display: flex;
     justify-content: center;
@@ -256,19 +215,6 @@ header p {
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
     text-transform: uppercase;
     letter-spacing: 1px;
-    position: relative;
-    overflow: hidden;
-}
-
-.filter-btn::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 60%);
-    z-index: 1;
 }
 
 .filter-btn i {
@@ -279,8 +225,8 @@ header p {
 .filter-btn:hover {
     background-color: var(--color-primary);
     color: white;
-    transform: translateY(-3px) translateX(-3px);
-    box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 .filter-btn:hover i {
@@ -290,8 +236,7 @@ header p {
 .filter-btn.active {
     background-color: var(--color-primary);
     color: white;
-    border-color: var(--color-primary);
-    transform: translateY(2px) translateX(2px);
+    transform: translateY(2px);
     box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
 }
 
@@ -299,7 +244,7 @@ header p {
     color: white;
 }
 
-/* Búsqueda con estilo urbano */
+/* Search */
 .search-container {
     margin-bottom: 40px;
     text-align: center;
@@ -324,8 +269,6 @@ header p {
     border: 3px solid var(--color-primary);
     border-radius: 4px;
     font-size: 1.1rem;
-    transition: all 0.3s ease;
-    font-family: 'Rubik', sans-serif;
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
     background-color: #2A2A2A;
     color: white;
@@ -341,10 +284,9 @@ header p {
 #search-input:focus {
     outline: none;
     border-color: var(--color-accent);
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.4);
 }
 
-/* Productos con estilo grafitero */
+/* Products */
 .productos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -358,7 +300,6 @@ header p {
     overflow: hidden;
     box-shadow: var(--shadow);
     transition: all 0.4s ease;
-    border: none;
     position: relative;
 }
 
@@ -387,7 +328,7 @@ header p {
 
 .producto-img-container {
     position: relative;
-    padding-top: 75%; /* Proporción 4:3 */
+    padding-top: 75%;
     overflow: hidden;
     background-color: #1A1A1A;
 }
@@ -400,29 +341,10 @@ header p {
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
-    filter: saturate(1.2) contrast(1.1);
 }
 
 .producto:hover .producto-img {
     transform: scale(1.1);
-}
-
-/* Overlay con efecto spray para las imágenes */
-.producto-img-container::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 87, 34, 0.3) 0%, rgba(255, 87, 34, 0) 50%);
-    z-index: 1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.producto:hover .producto-img-container::after {
-    opacity: 1;
 }
 
 .producto-info {
@@ -436,7 +358,6 @@ header p {
     margin-bottom: 15px;
     color: white;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    letter-spacing: 1px;
 }
 
 .producto-descripcion {
@@ -469,7 +390,7 @@ header p {
     border-left: 3px solid var(--color-danger);
 }
 
-/* Estado vacío */
+/* Empty state */
 .empty-state {
     grid-column: 1 / -1;
     text-align: center;
@@ -493,35 +414,22 @@ header p {
     letter-spacing: 1px;
 }
 
-/* Footer con estilo urbano */
+/* Footer */
 footer {
     background-color: #111111;
     color: white;
-    padding: 50px 0 40px;
+    padding: 40px 0;
     position: relative;
-    overflow: hidden;
     margin-top: 60px;
     border-top: 8px solid var(--color-primary);
 }
 
-.footer-design {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    overflow: hidden;
-}
-
-/* Elementos de diseño del footer */
 .footer-design::before {
     content: "";
     position: absolute;
     width: 100%;
     height: 100%;
-    background-image: url('data:image/svg+xml;utf8,<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"><text x="50" y="150" font-family="Impact" font-size="80" fill="%23222222" transform="rotate(-30 100,100)">URBAN</text><text x="100" y="250" font-family="Impact" font-size="80" fill="%23222222" transform="rotate(15 150,250)">STYLE</text></svg>');
     background-size: 500px;
-    background-repeat: repeat;
     opacity: 0.1;
 }
 
@@ -531,7 +439,6 @@ footer {
     align-items: center;
     flex-wrap: wrap;
     gap: 30px;
-    position: relative;
     z-index: 1;
 }
 
@@ -567,40 +474,207 @@ footer {
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
     text-transform: uppercase;
     letter-spacing: 1px;
-    position: relative;
-    overflow: hidden;
-}
-
-.admin-link::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 60%);
-    z-index: 1;
 }
 
 .admin-link:hover {
     background-color: var(--color-accent);
-    transform: translateY(-3px) translateX(-3px);
-    box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Reservation button */
+.reservar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--color-accent);
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.reservar-btn:hover {
+    background-color: var(--color-primary);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.reserva-info {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: rgba(255, 193, 7, 0.15);
+    border-left: 3px solid var(--color-accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: #DDDDDD;
+}
+
+/* Modal reservation */
+.modal-reserva {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal-reserva.activo {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-contenido {
+    background-color: #252525;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.modal-reserva.activo .modal-contenido {
+    transform: translateY(0);
+}
+
+.modal-header {
+    background-color: var(--color-primary);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: white;
+    font-size: 1.5rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.cerrar-modal {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.modal-body p {
+    margin-bottom: 20px;
+    color: #CCCCCC;
+}
+
+.form-grupo {
+    margin-bottom: 20px;
+}
+
+.form-grupo label {
+    display: block;
+    margin-bottom: 10px;
+    color: white;
+    font-weight: 500;
+}
+
+.form-grupo input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #444;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+    font-size: 1rem;
+}
+
+.form-grupo input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.confirmar-reserva {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: var(--color-accent);
+    color: #000;
+    border: none;
+    padding: 12px 25px;
+    width: 100%;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.confirmar-reserva:hover {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+/* Notification */
+.notificacion-reserva {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+    transform: translateX(120%);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.notificacion-reserva.activo {
+    transform: translateX(0);
+}
+
+.notificacion-contenido {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.notificacion-contenido i {
+    font-size: 1.5rem;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    header {
-        padding: 30px 0;
-    }
-    
     header h1 {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
     }
     
     .logo {
         flex-direction: column;
-        gap: 10px;
     }
     
     .footer-content {
@@ -624,11 +698,4 @@ footer {
         max-width: 280px;
         justify-content: center;
     }
-    
-    .producto-nombre {
-        font-size: 1.3rem;
-    }
-    
-    header h1 {
-        font-size: 2.3rem;
-    }
+}
