@@ -63,7 +63,7 @@
             </div>
             <div class="header-right">
                 <span id="usernameDisplay"></span>
-                <button id="communityBtn" class="btn-small"><i class="fas fa-users"></i> COMUNIDAD</button>
+                <button id="searchUsersBtn" class="btn-small"><i class="fas fa-search"></i> USUARIOS</button>
                 <button id="logoutBtn" class="btn-small"><i class="fas fa-sign-out-alt"></i> SALIR</button>
             </div>
         </header>
@@ -196,16 +196,12 @@
                     </table>
                 </div>
 
-                <div class="input-group table-visibility">
-                    <label class="visibility-toggle">
-                        <input type="checkbox" id="tablePublicToggle">
-                        <span class="visibility-label"><i class="fas fa-globe"></i> HACER PÚBLICA ESTA TABLA</span>
-                    </label>
-                </div>
-
                 <div class="action-buttons">
                     <button id="saveTableBtn" class="btn glow-btn">
                         <i class="fas fa-save"></i> GUARDAR
+                    </button>
+                    <button id="shareTableBtn" class="btn btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i> COMPARTIR
                     </button>
                     <button id="createNewTableBtn" class="btn">
                         <i class="fas fa-plus-circle"></i> NUEVA TABLA
@@ -215,40 +211,21 @@
         </div>
     </div>
 
-    <!-- Modal para comunidad -->
-    <div id="communityModal" class="modal">
-        <div class="modal-content community-modal">
+    <!-- Modal para búsqueda de usuarios -->
+    <div id="searchUsersModal" class="modal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-users"></i> COMUNIDAD TRAP</h2>
+                <h2><i class="fas fa-search"></i> BUSCAR USUARIOS</h2>
                 <span class="close"><i class="fas fa-times"></i></span>
             </div>
-            <div class="modal-tabs">
-                <button class="modal-tab active" data-tab="users">USUARIOS</button>
-                <button class="modal-tab" data-tab="tables">TABLAS PÚBLICAS</button>
-            </div>
-            
-            <div id="usersTab" class="modal-tab-content active">
-                <div class="search-container">
-                    <div class="input-group">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="userSearchInput" placeholder="Buscar usuario...">
-                    </div>
-                </div>
-                <div id="usersList" class="community-list">
-                    <!-- Lista de usuarios generada dinámicamente -->
+            <div class="search-container">
+                <div class="input-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="userSearchInput" placeholder="Buscar usuario...">
                 </div>
             </div>
-            
-            <div id="tablesTab" class="modal-tab-content">
-                <div class="search-container">
-                    <div class="input-group">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="tableSearchInput" placeholder="Buscar tabla...">
-                    </div>
-                </div>
-                <div id="publicTablesList" class="community-list">
-                    <!-- Lista de tablas públicas generada dinámicamente -->
-                </div>
+            <div id="usersList" class="users-list">
+                <!-- Lista de usuarios generada dinámicamente -->
             </div>
         </div>
     </div>
@@ -267,15 +244,10 @@
                         <span id="userTablesCount">0</span>
                         <span>Tablas</span>
                     </div>
-                    <div class="stat-item">
-                        <i class="fas fa-star"></i>
-                        <span id="userRating">0</span>
-                        <span>Rating</span>
-                    </div>
                 </div>
             </div>
-            <div id="userPublicTables" class="saved-tables">
-                <!-- Tablas públicas del usuario -->
+            <div id="userTables" class="saved-tables">
+                <!-- Tablas del usuario -->
             </div>
         </div>
     </div>
@@ -367,40 +339,78 @@
                 </table>
             </div>
             <div class="action-buttons">
-                <button id="copyTableBtn" class="btn glow-btn">
-                    <i class="fas fa-copy"></i> COPIAR A MIS TABLAS
+                <button id="saveSharedTableBtn" class="btn glow-btn">
+                    <i class="fas fa-save"></i> GUARDAR EN MIS TABLAS
                 </button>
-                <button id="rateTableBtn" class="btn">
-                    <i class="fas fa-star"></i> CALIFICAR TABLA
+                <button id="shareViewTableBtn" class="btn btn-whatsapp">
+                    <i class="fab fa-whatsapp"></i> COMPARTIR
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal para calificar tabla -->
-    <div id="rateTableModal" class="modal">
+    <!-- Modal para compartir tabla -->
+    <div id="shareTableModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-star"></i> CALIFICA ESTA TABLA</h2>
+                <h2><i class="fab fa-whatsapp"></i> COMPARTIR TABLA</h2>
                 <span class="close"><i class="fas fa-times"></i></span>
             </div>
-            <div class="rating-container">
-                <div class="star-rating">
-                    <i class="fas fa-star" data-rating="1"></i>
-                    <i class="fas fa-star" data-rating="2"></i>
-                    <i class="fas fa-star" data-rating="3"></i>
-                    <i class="fas fa-star" data-rating="4"></i>
-                    <i class="fas fa-star" data-rating="5"></i>
+            <div class="share-container">
+                <p>Comparte esta tabla con otros cultivadores:</p>
+                <div class="input-group">
+                    <i class="fas fa-link"></i>
+                    <input type="text" id="shareLink" readonly>
                 </div>
-                <div class="rating-value">Calificación: <span id="ratingValue">0</span>/5</div>
+                <div class="share-buttons">
+                    <button id="copyLinkBtn" class="btn">
+                        <i class="fas fa-copy"></i> COPIAR ENLACE
+                    </button>
+                    <button id="shareWhatsAppBtn" class="btn btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i> ENVIAR POR WHATSAPP
+                    </button>
+                </div>
             </div>
-            <div class="input-group">
-                <i class="fas fa-comment"></i>
-                <textarea id="ratingComment" rows="4" placeholder="Deja un comentario sobre esta tabla (opcional)"></textarea>
+        </div>
+    </div>
+
+    <!-- Modal para tabla compartida (recepción) -->
+    <div id="sharedTableModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-table"></i> TABLA COMPARTIDA</h2>
+                <span class="close"><i class="fas fa-times"></i></span>
             </div>
-            <button id="submitRatingBtn" class="btn glow-btn">
-                <i class="fas fa-check"></i> ENVIAR CALIFICACIÓN
-            </button>
+            <div class="modal-subheader">
+                <span>Compartida por: <b id="sharedTableAuthor"></b></span>
+            </div>
+            <div class="table-container">
+                <table id="sharedDosageTable">
+                    <thead>
+                        <tr>
+                            <th>PRODUCTO</th>
+                            <th>SEM 1</th>
+                            <th>SEM 2</th>
+                            <th>SEM 3</th>
+                            <th>SEM 4</th>
+                            <th>SEM 5</th>
+                            <th>SEM 6</th>
+                            <th>SEM 7</th>
+                            <th>SEM 8</th>
+                            <th>SEM 9</th>
+                            <th>SEM 10</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sharedTableBody">
+                        <!-- Filas de la tabla compartida se generan dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="action-buttons">
+                <button id="saveSharedTableBtn" class="btn glow-btn">
+                    <i class="fas fa-save"></i> GUARDAR EN MIS TABLAS
+                </button>
+            </div>
         </div>
     </div>
 
