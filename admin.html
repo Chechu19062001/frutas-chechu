@@ -3,28 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administración - Frutas Naturales</title>
+    <title>Administraci�n - Frutas Chechu</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Estilos específicos para la página de administración */
+        /* Estilos espec�ficos para la p�gina de administraci�n */
         .admin-header {
             background-color: var(--color-dark);
             padding: 20px 0;
             margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="%23212121"/><path d="M0,0 L200,200 M40,0 L200,160 M80,0 L200,120 M120,0 L200,80 M160,0 L200,40 M0,40 L160,200 M0,80 L120,200 M0,120 L80,200 M0,160 L40,200" stroke="%23292929" stroke-width="1"/></svg>');
+            position: relative;
+            overflow: hidden;
+            border-bottom: 8px solid var(--color-primary);
         }
 
-        .admin-header .logo i,
+        .admin-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 30% 20%, rgba(255, 87, 34, 0.8) 0%, rgba(255, 87, 34, 0) 70%),
+                            radial-gradient(circle at 70% 80%, rgba(255, 193, 7, 0.7) 0%, rgba(255, 193, 7, 0) 70%);
+            opacity: 0.7;
+            z-index: 0;
+        }
+
+        .admin-header .logo {
+            position: relative;
+            z-index: 1;
+        }
+
+        .admin-header .logo i {
+            color: var(--color-accent);
+            text-shadow: 2px 2px 0 var(--color-primary), 
+                       4px 4px 0 rgba(0, 0, 0, 0.3);
+            transform: rotate(-5deg);
+        }
+
         .admin-header h1 {
+            font-family: 'Permanent Marker', cursive;
+            color: var(--color-accent);
+            text-shadow: var(--tag-shadow);
+            transform: rotate(-2deg);
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+
+        .admin-header p {
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             color: white;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
         }
 
         .admin-panel {
-            background-color: white;
-            border-radius: 15px;
+            background-color: #252525;
+            border-radius: 6px;
             padding: 30px;
             box-shadow: var(--shadow);
             margin-bottom: 40px;
+            border: 3px solid var(--color-primary);
+            color: white;
+            position: relative;
+        }
+
+        /* Efecto de borde de cinta adhesiva */
+        .admin-panel::before,
+        .admin-panel::after {
+            content: "";
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.2);
+            height: 20px;
+        }
+
+        .admin-panel::before {
+            top: -10px;
+            left: 30px;
+            right: 30px;
+            transform: rotate(-1deg);
+        }
+
+        .admin-panel::after {
+            bottom: -10px;
+            left: 40%;
+            width: 150px;
+            transform: rotate(2deg);
         }
 
         .admin-title {
@@ -36,6 +107,17 @@
             gap: 15px;
         }
 
+        .admin-title h2 {
+            font-family: 'Permanent Marker', cursive;
+            color: var(--color-primary);
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
+        }
+
+        .admin-title h2 i {
+            color: var(--color-accent);
+        }
+
         .admin-actions {
             display: flex;
             gap: 10px;
@@ -43,51 +125,75 @@
 
         .btn {
             cursor: pointer;
-            padding: 10px 20px;
-            border-radius: 30px;
+            padding: 12px 25px;
+            border-radius: 4px;
             font-weight: 600;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             border: none;
-            font-family: 'Quicksand', sans-serif;
+            font-family: 'Rubik', sans-serif;
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 60%);
+            z-index: 1;
         }
 
         .btn-primary {
             background-color: var(--color-primary);
             color: white;
+            border: 2px solid var(--color-primary);
         }
 
         .btn-primary:hover {
             background-color: var(--color-primary-dark);
-            transform: translateY(-2px);
+            transform: translateY(-3px) translateX(-3px);
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.4);
         }
 
         .btn-secondary {
-            background-color: var(--color-light);
-            color: var(--color-dark);
-            border: 1px solid var(--color-gray);
+            background-color: #2A2A2A;
+            color: white;
+            border: 2px solid var(--color-primary);
         }
 
         .btn-secondary:hover {
-            background-color: var(--color-gray);
-            transform: translateY(-2px);
+            background-color: var(--color-primary);
+            transform: translateY(-3px) translateX(-3px);
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.4);
         }
 
         .btn-danger {
             background-color: var(--color-danger);
             color: white;
+            border: 2px solid var(--color-danger);
         }
 
         .btn-danger:hover {
             background-color: #C62828;
-            transform: translateY(-2px);
+            transform: translateY(-3px) translateX(-3px);
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.4);
         }
 
         .table-container {
             overflow-x: auto;
             margin-bottom: 30px;
+            background-color: #2A2A2A;
+            border-radius: 4px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
         }
 
         .admin-table {
@@ -97,16 +203,20 @@
         }
 
         .admin-table th {
-            background-color: var(--color-primary-light);
-            color: var(--color-primary-dark);
+            background-color: var(--color-primary);
+            color: white;
             text-align: left;
             padding: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
 
         .admin-table td {
             padding: 15px;
-            border-bottom: 1px solid var(--color-gray);
+            border-bottom: 1px solid #444;
             vertical-align: middle;
+            color: #BBBBBB;
         }
 
         .admin-table tr:last-child td {
@@ -118,21 +228,36 @@
             height: 60px;
             object-fit: cover;
             border-radius: 8px;
+            border: 2px solid var(--color-primary);
         }
 
         .estado-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            padding: 8px 15px;
+            border-radius: 3px;
+            font-size: 0.9rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .disponible {
+            background-color: rgba(76, 175, 80, 0.15);
+            color: #4CAF50;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .no-disponible {
+            background-color: rgba(244, 67, 54, 0.15);
+            color: var(--color-danger);
+            border-left: 3px solid var(--color-danger);
         }
 
         .acciones {
             display: flex;
-            gap: 5px;
+            gap: 10px;
         }
 
         .accion-btn {
@@ -143,25 +268,27 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            color: var(--color-dark);
-            background-color: var(--color-light);
-            border: none;
+            transition: all 0.3s ease;
+            color: white;
+            background-color: #2A2A2A;
+            border: 2px solid var(--color-primary);
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
         }
 
         .accion-btn:hover {
-            transform: translateY(-2px);
-            background-color: var(--color-gray);
+            transform: translateY(-3px) translateX(-3px);
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
         }
 
         .edit-btn:hover {
-            color: var(--color-primary);
-            background-color: var(--color-primary-light);
+            color: white;
+            background-color: var(--color-primary);
         }
 
         .delete-btn:hover {
             color: white;
             background-color: var(--color-danger);
+            border-color: var(--color-danger);
         }
 
         /* Modal */
@@ -171,7 +298,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -187,13 +314,15 @@
         }
 
         .modal {
-            background-color: white;
-            border-radius: 15px;
+            background-color: #252525;
+            border-radius: 6px;
             width: 90%;
             max-width: 600px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
             transform: translateY(-20px);
             transition: transform 0.3s ease;
+            border: 3px solid var(--color-primary);
+            color: white;
         }
 
         .modal-backdrop.active .modal {
@@ -202,17 +331,18 @@
 
         .modal-header {
             padding: 20px;
-            border-bottom: 1px solid var(--color-gray);
+            border-bottom: 1px solid #444;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .modal-title {
+            font-family: 'Permanent Marker', cursive;
             font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--color-primary-dark);
+            color: var(--color-primary);
             margin: 0;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
         }
 
         .modal-close {
@@ -240,23 +370,30 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: var(--color-dark);
+            color: #CCC;
         }
 
         .form-control {
             width: 100%;
             padding: 12px 15px;
-            border: 2px solid var(--color-gray);
-            border-radius: 10px;
-            font-family: 'Quicksand', sans-serif;
+            border: 2px solid var(--color-primary);
+            border-radius: 4px;
+            font-family: 'Rubik', sans-serif;
             font-size: 1rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            background-color: #2A2A2A;
+            color: white;
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px var(--color-primary-light);
+            border-color: var(--color-accent);
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .form-control::placeholder {
+            color: #777;
         }
 
         textarea.form-control {
@@ -290,9 +427,10 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background-color: #444;
             transition: .4s;
             border-radius: 34px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
         }
 
         .slider:before {
@@ -305,6 +443,7 @@
             background-color: white;
             transition: .4s;
             border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         input:checked + .slider {
@@ -321,7 +460,7 @@
 
         .modal-footer {
             padding: 15px 20px;
-            border-top: 1px solid var(--color-gray);
+            border-top: 1px solid #444;
             display: flex;
             justify-content: flex-end;
             gap: 10px;
@@ -336,11 +475,11 @@
         }
 
         .toast {
-            background-color: white;
-            color: var(--color-dark);
+            background-color: #252525;
+            color: white;
             padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            box-shadow: var(--shadow);
             margin-top: 10px;
             display: flex;
             align-items: center;
@@ -390,8 +529,8 @@
         .img-preview {
             width: 100%;
             height: 200px;
-            border-radius: 10px;
-            border: 2px dashed var(--color-gray);
+            border-radius: 6px;
+            border: 2px dashed var(--color-primary);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -399,11 +538,12 @@
             overflow: hidden;
             position: relative;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            background-color: #1A1A1A;
         }
 
         .img-preview:hover {
-            border-color: var(--color-primary);
+            border-color: var(--color-accent);
         }
 
         .img-preview img {
@@ -411,6 +551,7 @@
             height: 100%;
             object-fit: cover;
             display: none;
+            filter: saturate(1.2) contrast(1.1);
         }
 
         .img-preview.has-img img {
@@ -423,11 +564,11 @@
 
         .upload-icon {
             font-size: 3rem;
-            color: var(--color-gray);
+            color: var(--color-primary);
         }
 
         .img-preview:hover .upload-icon {
-            color: var(--color-primary);
+            color: var(--color-accent);
         }
 
         .img-input {
@@ -460,16 +601,38 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            background-color: white;
-            border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            background-color: #252525;
+            border: 2px solid var(--color-danger);
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
             color: var(--color-danger);
         }
 
+        .img-action-btn:hover {
+            background-color: var(--color-danger);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            background-color: #252525;
+            border-radius: 6px;
+            box-shadow: var(--shadow);
+            border: 3px dashed #444;
+        }
+
         .empty-state i {
-            font-size: 50px;
-            color: var(--color-gray);
-            margin-bottom: 15px;
+            font-size: 60px;
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        .empty-state p {
+            font-size: 1.3rem;
+            color: #BBBBBB;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .confirmation-modal .modal-body {
@@ -481,6 +644,32 @@
             font-size: 50px;
             color: var(--color-danger);
             margin-bottom: 20px;
+        }
+
+        small {
+            color: #777;
+            display: block;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        footer {
+            background-color: #111111;
+            color: white;
+            padding: 50px 0 40px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 60px;
+            border-top: 8px solid var(--color-primary);
+        }
+
+        .footer-design {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
         }
 
         @media (max-width: 768px) {
@@ -508,25 +697,28 @@
 </head>
 <body>
     <header class="admin-header">
+        <div class="splash splash-1"></div>
+        <div class="splash splash-2"></div>
+        <div class="splash splash-3"></div>
         <div class="container">
             <div class="logo">
                 <i class="fas fa-seedling"></i>
-                <h1>Frutas Naturales</h1>
+                <h1 data-text="Frutas Chechu">Frutas Chechu</h1>
             </div>
-            <p>Panel de Administración</p>
+            <p>Panel de Administraci�n</p>
         </div>
     </header>
     
     <main class="container">
         <div class="admin-panel">
             <div class="admin-title">
-                <h2><i class="fas fa-apple-alt"></i> Gestión de Productos</h2>
+                <h2><i class="fas fa-apple-alt"></i> Gesti�n de Productos</h2>
                 <div class="admin-actions">
                     <a href="index.html" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Volver al sitio
                     </a>
                     <button id="add-producto-btn" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Añadir Producto
+                        <i class="fas fa-plus"></i> A�adir Producto
                     </button>
                 </div>
             </div>
@@ -537,29 +729,29 @@
                         <tr>
                             <th>Imagen</th>
                             <th>Nombre</th>
-                            <th>Descripción</th>
+                            <th>Descripci�n</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="productos-tbody">
-                        <!-- Los productos se cargarán dinámicamente aquí -->
+                        <!-- Los productos se cargar�n din�micamente aqu� -->
                     </tbody>
                 </table>
             </div>
             
             <div id="empty-productos" class="empty-state" style="display: none;">
                 <i class="fas fa-leaf"></i>
-                <p>No hay productos en el inventario. ¡Añade tu primera fruta!</p>
+                <p>No hay productos en el inventario. �A�ade tu primera fruta!</p>
             </div>
         </div>
     </main>
 
-    <!-- Modal para añadir/editar productos -->
+    <!-- Modal para a�adir/editar productos -->
     <div id="producto-modal" class="modal-backdrop">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title" id="modal-title">Añadir Producto</h3>
+                <h3 class="modal-title" id="modal-title">A�adir Producto</h3>
                 <button class="modal-close" id="close-modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -586,7 +778,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="descripcion-input" class="form-label">Descripción</label>
+                        <label for="descripcion-input" class="form-label">Descripci�n</label>
                         <textarea id="descripcion-input" class="form-control"></textarea>
                     </div>
                     
@@ -608,17 +800,17 @@
         </div>
     </div>
 
-    <!-- Modal de confirmación para eliminar -->
+    <!-- Modal de confirmaci�n para eliminar -->
     <div id="delete-modal" class="modal-backdrop confirmation-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">Confirmar eliminación</h3>
+                <h3 class="modal-title">Confirmar eliminaci�n</h3>
                 <button class="modal-close" id="close-delete-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <i class="fas fa-exclamation-triangle warning-icon"></i>
-                <p>¿Estás seguro de que deseas eliminar este producto?</p>
-                <p>Esta acción no se puede deshacer.</p>
+                <p>�Est�s seguro de que deseas eliminar este producto?</p>
+                <p>Esta acci�n no se puede deshacer.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="cancel-delete-btn">Cancelar</button>
@@ -631,16 +823,13 @@
     <div class="toast-container" id="toast-container"></div>
 
     <footer>
-        <div class="footer-leaves">
-            <div class="footer-leaf footer-leaf-1"></div>
-            <div class="footer-leaf footer-leaf-2"></div>
-        </div>
+        <div class="footer-design"></div>
         <div class="container">
             <div class="footer-content">
                 <div class="footer-info">
-                    <p>&copy; 2025 Frutas Naturales. Todos los derechos reservados.</p>
                     <p><i class="fas fa-map-marker-alt"></i> Calle Naturaleza, 123</p>
                     <p><i class="fas fa-phone"></i> (123) 456-7890</p>
+                    <p>&copy; 2025 Frutas Chechu. Todos los derechos reservados.</p>
                 </div>
                 <a href="index.html" class="admin-link">
                     <i class="fas fa-home"></i> Volver al sitio
@@ -703,242 +892,183 @@
             imagenInput.addEventListener('change', handleImageUpload);
             removeImgBtn.addEventListener('click', removeImage);
             
-            // Función para cargar productos desde localStorage
+            // Funci�n para cargar productos desde localStorage
             function loadProductos() {
                 productos = JSON.parse(localStorage.getItem('productos')) || [];
                 renderProductos();
             }
-            
-            // Función para renderizar los productos en la tabla
+
+            // Funci�n para renderizar los productos en la tabla
             function renderProductos() {
                 productosTbody.innerHTML = '';
-                
                 if (productos.length === 0) {
                     emptyProductos.style.display = 'block';
-                    document.querySelector('.table-container').style.display = 'none';
-                } else {
-                    emptyProductos.style.display = 'none';
-                    document.querySelector('.table-container').style.display = 'block';
-                    
-                    productos.forEach((producto, index) => {
-                        const row = document.createElement('tr');
-                        
-                        row.innerHTML = `
-                            <td><img src="${producto.imagen || '/api/placeholder/200/200'}" alt="${producto.nombre}"></td>
-                            <td>${producto.nombre}</td>
-                            <td>${producto.descripcion || 'Sin descripción'}</td>
-                            <td>
-                                <span class="estado-badge ${producto.disponible ? 'disponible' : 'no-disponible'}">
-                                    <i class="fas ${producto.disponible ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                                    ${producto.disponible ? 'Disponible' : 'No disponible'}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="acciones">
-                                    <button class="accion-btn edit-btn" data-id="${index}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="accion-btn delete-btn" data-id="${index}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        `;
-                        
-                        productosTbody.appendChild(row);
-                    });
-                    
-                    // Agregar event listeners a los botones de editar y eliminar
-                    document.querySelectorAll('.edit-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const id = parseInt(this.getAttribute('data-id'));
-                            showEditProductoModal(id);
-                        });
-                    });
-                    
-                    document.querySelectorAll('.delete-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const id = parseInt(this.getAttribute('data-id'));
-                            showDeleteModal(id);
-                        });
-                    });
+                    return;
                 }
+                emptyProductos.style.display = 'none';
+
+                productos.forEach(producto => {
+                    const tr = document.createElement('tr');
+
+                    const imgTd = document.createElement('td');
+                    const img = document.createElement('img');
+                    img.src = producto.imagen;
+                    img.alt = producto.nombre;
+                    imgTd.appendChild(img);
+
+                    const nombreTd = document.createElement('td');
+                    nombreTd.textContent = producto.nombre;
+
+                    const descTd = document.createElement('td');
+                    descTd.textContent = producto.descripcion;
+
+                    const estadoTd = document.createElement('td');
+                    const estadoBadge = document.createElement('span');
+                    estadoBadge.classList.add('estado-badge', producto.disponible ? 'disponible' : 'no-disponible');
+                    estadoBadge.textContent = producto.disponible ? 'Disponible' : 'No disponible';
+                    estadoTd.appendChild(estadoBadge);
+
+                    const accionesTd = document.createElement('td');
+                    accionesTd.classList.add('acciones');
+
+                    const editBtn = document.createElement('button');
+                    editBtn.classList.add('accion-btn', 'edit-btn');
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                    editBtn.addEventListener('click', () => showEditProductoModal(producto.id));
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.classList.add('accion-btn', 'delete-btn');
+                    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                    deleteBtn.addEventListener('click', () => showDeleteModal(producto.id));
+
+                    accionesTd.appendChild(editBtn);
+                    accionesTd.appendChild(deleteBtn);
+
+                    tr.appendChild(imgTd);
+                    tr.appendChild(nombreTd);
+                    tr.appendChild(descTd);
+                    tr.appendChild(estadoTd);
+                    tr.appendChild(accionesTd);
+
+                    productosTbody.appendChild(tr);
+                });
             }
-            
-            // Función para mostrar el modal de añadir producto
+
             function showAddProductoModal() {
                 currentProductoId = null;
-                modalTitle.textContent = 'Añadir Producto';
-                productoIdInput.value = '';
+                modalTitle.textContent = 'A�adir Producto';
                 productoForm.reset();
                 imagenBase64 = null;
-                imgPreview.classList.remove('has-img');
                 previewImg.src = '';
-                disponibleText.textContent = 'Disponible';
-                
+                imgPreview.classList.remove('has-img');
                 productoModal.classList.add('active');
             }
-            
-            // Función para mostrar el modal de editar producto
+
             function showEditProductoModal(id) {
+                const producto = productos.find(p => p.id === id);
+                if (!producto) return;
+
                 currentProductoId = id;
-                const producto = productos[id];
-                
                 modalTitle.textContent = 'Editar Producto';
-                productoIdInput.value = id;
+                productoIdInput.value = producto.id;
                 nombreInput.value = producto.nombre;
-                descripcionInput.value = producto.descripcion || '';
+                descripcionInput.value = producto.descripcion;
                 disponibleInput.checked = producto.disponible;
                 disponibleText.textContent = producto.disponible ? 'Disponible' : 'No disponible';
-                
-                if (producto.imagen) {
-                    imgPreview.classList.add('has-img');
-                    previewImg.src = producto.imagen;
-                } else {
-                    imgPreview.classList.remove('has-img');
-                    previewImg.src = '';
-                }
-                
+                previewImg.src = producto.imagen;
+                imgPreview.classList.add('has-img');
+                imagenBase64 = producto.imagen;
                 productoModal.classList.add('active');
             }
-            
-            // Función para cerrar el modal de producto
+
             function closeProductoModal() {
                 productoModal.classList.remove('active');
             }
-            
-            // Función para mostrar el modal de confirmación de eliminación
+
             function showDeleteModal(id) {
                 currentProductoId = id;
                 deleteModal.classList.add('active');
             }
-            
-            // Función para cerrar el modal de confirmación de eliminación
+
             function closeDeleteModal() {
                 deleteModal.classList.remove('active');
             }
-            
-            // Función para guardar un producto
+
             function saveProducto() {
                 const nombre = nombreInput.value.trim();
-                
-                if (!nombre) {
-                    mostrarToast('Por favor, ingresa el nombre del producto', 'error');
+                const descripcion = descripcionInput.value.trim();
+                const disponible = disponibleInput.checked;
+
+                if (!nombre || !imagenBase64) {
+                    showToast('Por favor, completa los campos requeridos', 'error');
                     return;
                 }
-                
-                const productoData = {
-                    nombre: nombre,
-                    descripcion: descripcionInput.value.trim(),
-                    disponible: disponibleInput.checked,
-                    imagen: imgPreview.classList.contains('has-img') ? previewImg.src : null
+
+                const producto = {
+                    id: currentProductoId || Date.now(),
+                    nombre,
+                    descripcion,
+                    disponible,
+                    imagen: imagenBase64
                 };
-                
-                if (currentProductoId !== null) {
-                    // Editar producto existente
-                    productos[currentProductoId] = productoData;
-                    mostrarToast('Producto actualizado correctamente', 'success');
+
+                if (currentProductoId) {
+                    const index = productos.findIndex(p => p.id === currentProductoId);
+                    productos[index] = producto;
+                    showToast('Producto actualizado', 'success');
                 } else {
-                    // Añadir nuevo producto
-                    productos.push(productoData);
-                    mostrarToast('Producto añadido correctamente', 'success');
+                    productos.push(producto);
+                    showToast('Producto a�adido', 'success');
                 }
-                
-                // Guardar en localStorage y actualizar la vista
+
                 localStorage.setItem('productos', JSON.stringify(productos));
-                renderProductos();
                 closeProductoModal();
+                renderProductos();
             }
-            
-            // Función para eliminar un producto
+
             function deleteProducto() {
-                if (currentProductoId !== null) {
-                    productos.splice(currentProductoId, 1);
-                    localStorage.setItem('productos', JSON.stringify(productos));
-                    renderProductos();
-                    mostrarToast('Producto eliminado correctamente', 'success');
-                }
+                productos = productos.filter(p => p.id !== currentProductoId);
+                localStorage.setItem('productos', JSON.stringify(productos));
                 closeDeleteModal();
+                renderProductos();
+                showToast('Producto eliminado', 'success');
             }
-            
-            // Función para manejar la subida de imágenes
-            function handleImageUpload(e) {
-                const file = e.target.files[0];
+
+            function handleImageUpload(event) {
+                const file = event.target.files[0];
                 if (!file) return;
-                
-                // Verificar el tipo y tamaño del archivo
-                if (!file.type.match('image.*')) {
-                    mostrarToast('Por favor, selecciona una imagen válida', 'error');
-                    return;
-                }
-                
-                if (file.size > 5 * 1024 * 1024) {
-                    mostrarToast('La imagen no debe superar los 5MB', 'error');
-                    return;
-                }
-                
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
+                    imagenBase64 = e.target.result;
+                    previewImg.src = imagenBase64;
                     imgPreview.classList.add('has-img');
-                    previewImg.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
-            
-            // Función para eliminar la imagen
-            function removeImage(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                imgPreview.classList.remove('has-img');
+
+            function removeImage() {
+                imagenBase64 = null;
                 previewImg.src = '';
-                imagenInput.value = '';
-            }
-            
-            // Función para mostrar notificaciones toast
-            function mostrarToast(mensaje, tipo = 'success') {
-                const toastContainer = document.getElementById('toast-container');
-                
-                const toast = document.createElement('div');
-                toast.className = `toast ${tipo}`;
-                
-                const icon = tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-                
-                toast.innerHTML = `
-                    <div class="toast-icon">
-                        <i class="fas ${icon}"></i>
-                    </div>
-                    <div class="toast-message">${mensaje}</div>
-                    <button class="toast-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                
-                toastContainer.appendChild(toast);
-                
-                // Mostrar el toast con un pequeño retraso para la animación
-                setTimeout(() => {
-                    toast.classList.add('show');
-                }, 10);
-                
-                // Configurar el cierre del toast
-                const closeBtn = toast.querySelector('.toast-close');
-                closeBtn.addEventListener('click', () => {
-                    cerrarToast(toast);
-                });
-                
-                // Cerrar automáticamente después de 5 segundos
-                setTimeout(() => {
-                    cerrarToast(toast);
-                }, 5000);
+                imgPreview.classList.remove('has-img');
             }
 
-            // Función auxiliar para cerrar el toast
-            function cerrarToast(toast) {
-                toast.classList.remove('show');
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.classList.add('toast', 'show', type);
+
+                toast.innerHTML = `
+                    <span class="toast-icon"><i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i></span>
+                    <span class="toast-message">${message}</span>
+                    <button class="toast-close">&times;</button>
+                `;
+
+                toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+                document.getElementById('toast-container').appendChild(toast);
+
                 setTimeout(() => {
                     toast.remove();
-                }, 300);
+                }, 4000);
             }
         });
     </script>
