@@ -40,6 +40,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Función para verificar si es dispositivo móvil
+function esDispositivoMovil() {
+    return window.innerWidth <= 768;
+}
+
 // Función para cargar los productos desde localStorage
 function cargarProductos() {
     const contenedor = document.getElementById('producto-container');
@@ -63,24 +68,6 @@ function cargarProductos() {
             disponible: false,
             reservable: true,
             etiqueta: 'Exótico'
-        },
-        {
-            id: 'dragon-fruit',
-            nombre: 'Fruta Dragón',
-            descripcion: 'Exótica fruta con un exterior colorido y pulpa llena de semillas comestibles. Sabor dulce y refrescante.',
-            imagen: '/api/placeholder/400/300?text=Fruta+Dragón',
-            disponible: true,
-            reservable: false,
-            etiqueta: 'Súper Exótico'
-        },
-        {
-            id: 'rambutan',
-            nombre: 'Rambután Salvaje',
-            descripcion: 'Fruta tropical con exterior peludo y sabor dulce similar a la uva. Una experiencia única.',
-            imagen: '/api/placeholder/400/300?text=Rambután',
-            disponible: true,
-            reservable: false,
-            etiqueta: 'Tropical'
         }
     ];
     
@@ -91,6 +78,16 @@ function cargarProductos() {
     if (!productos || !Array.isArray(productos) || productos.length === 0) {
         localStorage.setItem('productos', JSON.stringify(productosDefault));
         productos = productosDefault;
+    } else if (esDispositivoMovil()) {
+        // Si es un dispositivo móvil, filtrar para mostrar solo los productos específicos
+        productos = productos.filter(producto => 
+            producto.id === 'mandarina-radical' || producto.id === 'melones-shimo'
+        );
+        
+        // Si no se encontraron los productos específicos, usar los predefinidos
+        if (productos.length === 0) {
+            productos = productosDefault;
+        }
     }
     
     // Limpiar el contenedor
@@ -107,6 +104,11 @@ function cargarProductos() {
         });
     }
 }
+
+// Re-verificar productos al cambiar el tamaño de la ventana
+window.addEventListener('resize', function() {
+    cargarProductos();
+});
 
 // Función para crear un elemento HTML de un producto
 function crearElementoProducto(producto) {
