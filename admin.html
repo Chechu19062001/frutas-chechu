@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración - Frutas Naturales</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Estilos específicos para la página de administración */
+        .admin-header {
+            background-color: var(--color-dark);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .admin-header .logo i,
+        .admin-header h1 {
+            color: white;
+        }
+
+        .admin-panel {
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+        }
+
+        .admin-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-light);
+            color: var(--color-dark);
+            border: 1px solid var(--color-gray);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--color-gray);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: var(--color-danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #C62828;
+            transform: translateY(-2px);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .admin-table th {
+            background-color: var(--color-primary-light);
+            color: var(--color-primary-dark);
+            text-align: left;
+            padding: 15px;
+        }
+
+        .admin-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--color-gray);
+            vertical-align: middle;
+        }
+
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .admin-table img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .estado-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 5px;
+        }
+
+        .accion-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--color-dark);
+            background-color: var(--color-light);
+            border: none;
+        }
+
+        .accion-btn:hover {
+            transform: translateY(-2px);
+            background-color: var(--color-gray);
+        }
+
+        .edit-btn:hover {
+            color: var(--color-primary);
+            background-color: var(--color-primary-light);
+        }
+
+        .delete-btn:hover {
+            color: white;
+            background-color: var(--color-danger);
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background-color: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-backdrop.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--color-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--color-primary-dark);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--color-danger);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--color-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--color-gray);
+            border-radius: 10px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-light);
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--color-primary);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--color-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--color-gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background-color: white;
+            color: var(--color-dark);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 5px solid var(--color-primary);
+        }
+
+        .toast.error {
+            border-left: 5px solid var(--color-danger);
+        }
+
+        .toast-icon {
+            font-size: 1.2rem;
+        }
+
+        .toast.success .toast-icon {
+            color: var(--color-primary);
+        }
+
+        .toast.error .toast-icon {
+            color: var(--color-danger);
+        }
+
+        .toast-message {
+            flex-grow: 1;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Imagen previa */
+        .img-preview {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            border: 2px dashed var(--color-gray);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .img-preview:hover {
+            border-color: var(--color-primary);
+        }
+
+        .img-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .img-preview.has-img img {
+            display: block;
+        }
+
+        .img-preview.has-img .upload-icon {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--color-gray);
+        }
+
+        .img-preview:hover .upload-icon {
+            color: var(--color-primary);
+        }
+
+        .img-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .img-actions {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .img-preview:hover .img-actions {
+            opacity: 1;
+        }
+
+        .img-action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background-color: white;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            color: var(--color-danger);
+        }
+
+        .empty-state i {
+            font-size: 50px;
+            color: var(--color-gray);
+            margin-bottom: 15px;
+        }
+
+        .confirmation-modal .modal-body {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .confirmation-modal .warning-icon {
+            font-size: 50px;
+            color: var(--color-danger);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-title {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .admin-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .acciones {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .accion-btn {
+                width: 100%;
+                border-radius: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-seedling"></i>
+                <h1>Frutas Naturales</h1>
+            </div>
+            <p>Panel de Administración</p>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="admin-panel">
+            <div class="admin-title">
+                <h2><i class="fas fa-apple-alt"></i> Gestión de Productos</h2>
+                <div class="admin-actions">
+                    <a href="index.html" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al sitio
+                    </a>
+                    <button id="add-producto-btn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Añadir Producto
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Imagen</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos-tbody">
+                        <!-- Los productos se cargarán dinámicamente aquí -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="empty-productos" class="empty-state" style="display: none;">
+                <i class="fas fa-leaf"></i>
+                <p>No hay productos en el inventario. ¡Añade tu primera fruta!</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para añadir/editar productos -->
+    <div id="producto-modal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Añadir Producto</h3>
+                <button class="modal-close" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="producto-form">
+                    <input type="hidden" id="producto-id">
+                    
+                    <div class="form-group">
+                        <div class="img-preview" id="img-preview">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <img id="preview-img" src="" alt="Vista previa">
+                            <input type="file" class="img-input" id="imagen-input" accept="image/*">
+                            <div class="img-actions">
+                                <button type="button" class="img-action-btn" id="remove-img">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small>Haz clic para subir una imagen</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nombre-input" class="form-label">Nombre del producto *</label>
+                        <input type="text" id="nombre-input" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="descripcion-input" class="form-label">Descripción</label>
+                        <textarea id="descripcion-input" class="form-control"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" id="disponible-input" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <span id="disponible-text">Disponible</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-btn">Cancelar</button>
+                <button class="btn btn-primary" id="save-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para eliminar -->
+    <div id="delete-modal" class="modal-backdrop confirmation-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirmar eliminación</h3>
+                <button class="modal-close" id="close-delete-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <p>¿Estás seguro de que deseas eliminar este producto?</p>
+                <p>Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-delete-btn">Cancelar</button>
+                <button class="btn btn-danger" id="confirm-delete-btn">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de notificaciones toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <footer>
+        <div class="footer-leaves">
+            <div class="footer-leaf footer-leaf-1"></div>
+            <div class="footer-leaf footer-leaf-2"></div>
+        </div>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p>&copy; 2025 Frutas Naturales. Todos los derechos reservados.</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Calle Naturaleza, 123</p>
+                    <p><i class="fas fa-phone"></i> (123) 456-7890</p>
+                </div>
+                <a href="index.html" class="admin-link">
+                    <i class="fas fa-home"></i> Volver al sitio
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables globales
+            let productos = [];
+            let currentProductoId = null;
+            let imagenBase64 = null;
+            
+            // Elementos del DOM
+            const productosTbody = document.getElementById('productos-tbody');
+            const emptyProductos = document.getElementById('empty-productos');
+            const productoModal = document.getElementById('producto-modal');
+            const deleteModal = document.getElementById('delete-modal');
+            const productoForm = document.getElementById('producto-form');
+            const modalTitle = document.getElementById('modal-title');
+            const productoIdInput = document.getElementById('producto-id');
+            const nombreInput = document.getElementById('nombre-input');
+            const descripcionInput = document.getElementById('descripcion-input');
+            const disponibleInput = document.getElementById('disponible-input');
+            const disponibleText = document.getElementById('disponible-text');
+            const imgPreview = document.getElementById('img-preview');
+            const previewImg = document.getElementById('preview-img');
+            const imagenInput = document.getElementById('imagen-input');
+            const removeImgBtn = document.getElementById('remove-img');
+            
+            // Botones
+            const addProductoBtn = document.getElementById('add-producto-btn');
+            const closeModalBtn = document.getElementById('close-modal');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const saveBtn = document.getElementById('save-btn');
+            const closeDeleteModalBtn = document.getElementById('close-delete-modal');
+            const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+            
+            // Cargar productos al iniciar
+            loadProductos();
+            
+            // Event Listeners
+            addProductoBtn.addEventListener('click', showAddProductoModal);
+            closeModalBtn.addEventListener('click', closeProductoModal);
+            cancelBtn.addEventListener('click', closeProductoModal);
+            saveBtn.addEventListener('click', saveProducto);
+            closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
+            cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+            confirmDeleteBtn.addEventListener('click', deleteProducto);
+            
+            // Evento para cambiar el texto del estado disponible
+            disponibleInput.addEventListener('change', function() {
+                disponibleText.textContent = this.checked ? 'Disponible' : 'No disponible';
+            });
+            
+            // Eventos para la imagen
+            imagenInput.addEventListener('change', handleImageUpload);
+            removeImgBtn.addEventListener('click', removeImage);
+            
+            // Función para cargar productos desde localStorage
+            function loadProductos() {
+                productos = JSON.parse(localStorage.getItem('productos')) || [];
+                renderProductos();
+            }
+            
+            // Función para renderizar los productos en la tabla
+            function renderProductos() {
+                productosTbody.innerHTML = '';
+                
+                if (productos.length === 0) {
+                    emptyProductos.style.display = 'block';
+                    document.querySelector('.table-container').style.display = 'none';
+                } else {
+                    emptyProductos.style.display = 'none';
+                    document.querySelector('.table-container').style.display = 'block';
+                    
+                    productos.forEach((producto, index) => {
+                        const row = document.createElement('tr');
+                        
+                        row.innerHTML = `
+                            <td><img src="${producto.imagen || '/api/placeholder/200/200'}" alt="${producto.nombre}"></td>
+                            <td>${producto.nombre}</td>
+                            <td>${producto.descripcion || 'Sin descripción'}</td>
+                            <td>
+                                <span class="estado-badge ${producto.disponible ? 'disponible' : 'no-disponible'}">
+                                    <i class="fas ${producto.disponible ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                                    ${producto.disponible ? 'Disponible' : 'No disponible'}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="acciones">
+                                    <button class="accion-btn edit-btn" data-id="${index}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="accion-btn delete-btn" data-id="${index}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        
+                        productosTbody.appendChild(row);
+                    });
+                    
+                    // Agregar event listeners a los botones de editar y eliminar
+                    document.querySelectorAll('.edit-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const id = parseInt(this.getAttribute('data-id'));
+                            showEditProductoModal(id);
+                        });
+                    });
+                    
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const id = parseInt(this.getAttribute('data-id'));
+                            showDeleteModal(id);
+                        });
+                    });
+                }
+            }
+            
+            // Función para mostrar el modal de añadir producto
+            function showAddProductoModal() {
+                currentProductoId = null;
+                modalTitle.textContent = 'Añadir Producto';
+                productoIdInput.value = '';
+                productoForm.reset();
+                imagenBase64 = null;
+                imgPreview.classList.remove('has-img');
+                previewImg.src = '';
+                disponibleText.textContent = 'Disponible';
+                
+                productoModal.classList.add('active');
+            }
+            
+            // Función para mostrar el modal de editar producto
+            function showEditProductoModal(id) {
+                currentProductoId = id;
+                const producto = productos[id];
+                
+                modalTitle.textContent = 'Editar Producto';
+                productoIdInput.value = id;
+                nombreInput.value = producto.nombre;
+                descripcionInput.value = producto.descripcion || '';
+                disponibleInput.checked = producto.disponible;
+                disponibleText.textContent = producto.disponible ? 'Disponible' : 'No disponible';
+                
+                if (producto.imagen) {
+                    imgPreview.classList.add('has-img');
+                    previewImg.src = producto.imagen;
+                } else {
+                    imgPreview.classList.remove('has-img');
+                    previewImg.src = '';
+                }
+                
+                productoModal.classList.add('active');
+            }
+            
+            // Función para cerrar el modal de producto
+            function closeProductoModal() {
+                productoModal.classList.remove('active');
+            }
+            
+            // Función para mostrar el modal de confirmación de eliminación
+            function showDeleteModal(id) {
+                currentProductoId = id;
+                deleteModal.classList.add('active');
+            }
+            
+            // Función para cerrar el modal de confirmación de eliminación
+            function closeDeleteModal() {
+                deleteModal.classList.remove('active');
+            }
+            
+            // Función para guardar un producto
+            function saveProducto() {
+                const nombre = nombreInput.value.trim();
+                
+                if (!nombre) {
+                    mostrarToast('Por favor, ingresa el nombre del producto', 'error');
+                    return;
+                }
+                
+                const productoData = {
+                    nombre: nombre,
+                    descripcion: descripcionInput.value.trim(),
+                    disponible: disponibleInput.checked,
+                    imagen: imgPreview.classList.contains('has-img') ? previewImg.src : null
+                };
+                
+                if (currentProductoId !== null) {
+                    // Editar producto existente
+                    productos[currentProductoId] = productoData;
+                    mostrarToast('Producto actualizado correctamente', 'success');
+                } else {
+                    // Añadir nuevo producto
+                    productos.push(productoData);
+                    mostrarToast('Producto añadido correctamente', 'success');
+                }
+                
+                // Guardar en localStorage y actualizar la vista
+                localStorage.setItem('productos', JSON.stringify(productos));
+                renderProductos();
+                closeProductoModal();
+            }
+            
+            // Función para eliminar un producto
+            function deleteProducto() {
+                if (currentProductoId !== null) {
+                    productos.splice(currentProductoId, 1);
+                    localStorage.setItem('productos', JSON.stringify(productos));
+                    renderProductos();
+                    mostrarToast('Producto eliminado correctamente', 'success');
+                }
+                closeDeleteModal();
+            }
+            
+            // Función para manejar la subida de imágenes
+            function handleImageUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Verificar el tipo y tamaño del archivo
+                if (!file.type.match('image.*')) {
+                    mostrarToast('Por favor, selecciona una imagen válida', 'error');
+                    return;
+                }
+                
+                if (file.size > 5 * 1024 * 1024) {
+                    mostrarToast('La imagen no debe superar los 5MB', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imgPreview.classList.add('has-img');
+                    previewImg.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Función para eliminar la imagen
+            function removeImage(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                imgPreview.classList.remove('has-img');
+                previewImg.src = '';
+                imagenInput.value = '';
+            }
+            
+            // Función para mostrar notificaciones toast
+            function mostrarToast(mensaje, tipo = 'success') {
+                const toastContainer = document.getElementById('toast-container');
+                
+                const toast = document.createElement('div');
+                toast.className = `toast ${tipo}`;
+                
+                const icon = tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+                
+                toast.innerHTML = `
+                    <div class="toast-icon">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="toast-message">${mensaje}</div>
+                    <button class="toast-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Mostrar el toast con un pequeño retraso para la animación
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 10);
+                
+                // Configurar el cierre del toast
+                const closeBtn = toast.querySelector('.toast-close');
+                closeBtn.addEventListener('click', () => {
+                    cerrarToast(toast);
+                });
+                
+                // Cerrar automáticamente después de 5 segundos
+                setTimeout(() => {
+                    cerrarToast(toast);
+                }, 5000);
+            }
+
+            // Función auxiliar para cerrar el toast
+            function cerrarToast(toast) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        });
+    </script>
+</body>
+</html>
