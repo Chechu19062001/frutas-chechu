@@ -1,750 +1,797 @@
-// PROYECTO CHECHU - TRAP EDITION JS
-document.addEventListener('DOMContentLoaded', function() {
-    // Elementos DOM principales
-    const authScreen = document.getElementById('authScreen');
-    const appContent = document.getElementById('appContent');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const loginButton = document.getElementById('loginButton');
-    const registerButton = document.getElementById('registerButton');
-    const loginTab = document.querySelector('[data-tab="login"]');
-    const registerTab = document.querySelector('[data-tab="register"]');
-    const usernameDisplay = document.getElementById('usernameDisplay');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const createTableBtn = document.getElementById('createTableBtn');
-    const tableCard = document.getElementById('tableCard');
-    const saveTableBtn = document.getElementById('saveTableBtn');
-    const createNewTableBtn = document.getElementById('createNewTableBtn');
-    const showSavedTablesBtn = document.getElementById('showSavedTablesBtn');
-    const savedTablesModal = document.getElementById('savedTablesModal');
-    const savedTablesList = document.getElementById('savedTablesList');
-    const notesModal = document.getElementById('notesModal');
-    const customProductModal = document.getElementById('customProductModal');
-    const addCustomButtons = document.querySelectorAll('.btn-add-custom');
-    const saveCustomProductBtn = document.getElementById('saveCustomProductBtn');
-    const tableNameInput = document.getElementById('tableNameInput');
+// PROYECTO CHECHU - TRAP EDITION
+document.addEventListener('DOMContentLoaded', init);
 
-    // Variables globales
-    let currentUser = null;
-    let currentTableId = null;
-    let currentNoteWeek = null;
-    let currentNoteProduct = null;
-    let currentCustomCategory = null;
+// Estado global de la aplicación
+const state = {
+    currentUser: null,
+    selectedProducts: {},
+    currentTable: { id: null, name: '', products: [], isPublic: false, notes: {} },
+    userTables: [],
+    customProducts: {}
+};
 
-    // ==================== SISTEMA DE AUTENTICACIÓN ====================
+// Inicialización de la aplicación
+function init() {
+    // Verificar si hay una sesión activa
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+        state.currentUser = JSON.parse(user);
+        showApp();
+        loadUserTables();
+    }
+
+    // Inicializar escuchadores de eventos
+    initEventListeners();
+}
+
+// Configurar todos los escuchadores de eventos
+function initEventListeners() {
+    // Auth events
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchAuthTab(tab.dataset.tab));
+    });
+    document.getElementById('loginButton').addEventListener('click', handleLogin);
+    document.getElementById('registerButton').addEventListener('click', handleRegister);
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+    // Product selection events
+    document.querySelectorAll('.product-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const input = option.querySelector('input');
+            if (input) {
+                input.checked = true;
+                selectProduct(input.name, input.value);
+            }
+        });
+    });
+
+    // Custom product events
+    document.querySelectorAll('.btn-add-custom').forEach(btn => {
+        btn.addEventListener('click', () => showCustomProductModal(btn.dataset.category));
+    });
+    document.getElementById('saveCustomProductBtn').addEventListener('click', addCustomProduct);
+
+    // Table actions
+    document.getElementById('createTableBtn').addEventListener('click', createTable);
+    document.getElementById('saveTableBtn').addEventListener('click', saveTable);
+    document.getElementById('createNewTableBtn').addEventListener('click', resetTableCreation);
+    document.getElementById('showSavedTablesBtn').addEventListener('click', showSavedTablesModal);
+
+    // Community events
+    document.getElementById('communityBtn').addEventListener('click', showCommunityModal);
+    document.querySelectorAll('.modal-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchModalTab(tab.dataset.tab));
+    });
+    document.getElementById('userSearchInput').addEventListener('input', filterUsers);
+    document.getElementById('tableSearchInput').addEventListener('input', filterPublicTables);
+
+    // Notes modal
+    document.getElementById('saveNotesBtn').addEventListener('click', saveNotes);
+
+    // Tables view events
+    document.getElementById('copyTableBtn').addEventListener('click', copyTableToMine);
+    document.getElementById('rateTableBtn').addEventListener('click', showRatingModal);
+    document.getElementById('submitRatingBtn').addEventListener('click', submitRating);
+
+    // Star rating events
+    document.querySelectorAll('.star-rating i').forEach(star => {
+        star.addEventListener('click', () => setRating(star.dataset.rating));
+        star.addEventListener('mouseover', () => previewRating(star.dataset.rating));
+        star.addEventListener('mouseout', resetRatingPreview);
+    });
+
+    // Modal close buttons
+    document.querySelectorAll('.close').forEach(closeBtn => {
+        closeBtn.addEventListener('click', () => {
+            const modal = closeBtn.closest('.modal');
+            if (modal) modal.style.display = 'none';
+        });
+    });
+
+    // Close modals on click outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    });
+}
+
+// ========== AUTENTICACIÓN ==========
+
+function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    document.querySelector(`.auth-tab[data-tab="${tab}"]`).classList.add('active');
+    document.getElementById(`${tab}Form`).classList.add('active');
+}
+
+function handleLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
     
-    // Inicializar el sistema de autenticación
-    function initAuth() {
-        // Cargar usuario del localStorage si existe
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            showApp();
-        } else {
-            showAuth();
-        }
-
-        // Event listeners para la autenticación
-        loginTab.addEventListener('click', () => {
-            loginTab.classList.add('active');
-            registerTab.classList.remove('active');
-            loginForm.classList.add('active');
-            registerForm.classList.remove('active');
-        });
-
-        registerTab.addEventListener('click', () => {
-            registerTab.classList.add('active');
-            loginTab.classList.remove('active');
-            registerForm.classList.add('active');
-            loginForm.classList.remove('active');
-        });
-
-        // Login
-        loginButton.addEventListener('click', () => {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-            
-            if (!username || !password) {
-                showNotification('Por favor, completa todos los campos', 'error');
-                return;
-            }
-
-            const users = getUsers();
-            const user = users.find(u => u.username === username && u.password === password);
-            
-            if (user) {
-                currentUser = user;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                showApp();
-                showNotification(`¡Bienvenido de nuevo, ${username}!`, 'success');
-            } else {
-                showNotification('Usuario o contraseña incorrectos', 'error');
-            }
-        });
-
-        // Registro
-        registerButton.addEventListener('click', () => {
-            const username = document.getElementById('registerUsername').value.trim();
-            const password = document.getElementById('registerPassword').value.trim();
-            const confirmPassword = document.getElementById('confirmPassword').value.trim();
-            
-            if (!username || !password || !confirmPassword) {
-                showNotification('Por favor, completa todos los campos', 'error');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                showNotification('Las contraseñas no coinciden', 'error');
-                return;
-            }
-
-            const users = getUsers();
-            if (users.some(u => u.username === username)) {
-                showNotification('Este nombre de usuario ya existe', 'error');
-                return;
-            }
-
-            // Crear nuevo usuario
-            const newUser = {
-                username,
-                password,
-                tables: [],
-                customProducts: []
-            };
-
-            users.push(newUser);
-            saveUsers(users);
-            
-            currentUser = newUser;
-            localStorage.setItem('currentUser', JSON.stringify(newUser));
-            
-            showApp();
-            showNotification(`¡Cuenta creada con éxito, ${username}!`, 'success');
-        });
-
-        // Logout
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('currentUser');
-            currentUser = null;
-            showAuth();
-            showNotification('Has cerrado sesión correctamente', 'success');
-        });
+    if (!username || !password) {
+        showNotification('Por favor completa todos los campos', 'error');
+        return;
     }
 
-    // Obtener usuarios del localStorage
-    function getUsers() {
-        const users = localStorage.getItem('proyectoChechu_users');
-        return users ? JSON.parse(users) : [];
+    // Simular inicio de sesión (en una app real esto sería una llamada API)
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.username === username && u.password === password);
+    
+    if (user) {
+        state.currentUser = { username: user.username, id: user.id };
+        localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
+        showApp();
+        loadUserTables();
+        showNotification('Inicio de sesión exitoso', 'success');
+    } else {
+        showNotification('Usuario o contraseña incorrectos', 'error');
     }
+}
 
-    // Guardar usuarios en localStorage
-    function saveUsers(users) {
-        localStorage.setItem('proyectoChechu_users', JSON.stringify(users));
+function handleRegister() {
+    const username = document.getElementById('registerUsername').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (!username || !password || !confirmPassword) {
+        showNotification('Por favor completa todos los campos', 'error');
+        return;
     }
-
-    // Mostrar pantalla de autenticación
-    function showAuth() {
-        authScreen.classList.remove('hidden');
-        appContent.classList.add('hidden');
-        // Resetear campos
-        document.getElementById('loginUsername').value = '';
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('registerUsername').value = '';
-        document.getElementById('registerPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
+    
+    if (password !== confirmPassword) {
+        showNotification('Las contraseñas no coinciden', 'error');
+        return;
     }
+    
+    // Validar usuario único
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    if (users.some(u => u.username === username)) {
+        showNotification('El nombre de usuario ya está en uso', 'error');
+        return;
+    }
+    
+    // Crear nuevo usuario
+    const newUser = {
+        id: Date.now().toString(),
+        username,
+        password,
+        tables: [],
+        customProducts: {}
+    };
+    users.push(newUser);
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    // Auto login
+    state.currentUser = { username: newUser.username, id: newUser.id };
+    localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
+    showApp();
+    showNotification('Registro exitoso, bienvenido', 'success');
+}
 
-    // Mostrar aplicación principal
-    function showApp() {
-        authScreen.classList.add('hidden');
-        appContent.classList.remove('hidden');
-        tableCard.classList.add('hidden');
-        usernameDisplay.textContent = currentUser.username;
+function handleLogout() {
+    localStorage.removeItem('currentUser');
+    state.currentUser = null;
+    document.getElementById('appContent').classList.add('hidden');
+    document.getElementById('authScreen').classList.remove('hidden');
+    resetState();
+    showNotification('Sesión cerrada correctamente', 'success');
+}
+
+function showApp() {
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('appContent').classList.remove('hidden');
+    document.getElementById('usernameDisplay').textContent = state.currentUser.username;
+}
+
+// ========== GESTIÓN DE PRODUCTOS ==========
+
+function selectProduct(category, value) {
+    state.selectedProducts[category] = value;
+    
+    // Actualizar UI
+    const options = document.querySelectorAll(`.product-options[data-category="${category}"] .product-option`);
+    options.forEach(option => {
+        const input = option.querySelector('input');
+        option.classList.toggle('selected', input && input.value === value);
+    });
+}
+
+function showCustomProductModal(category) {
+    document.getElementById('customProductCategory').value = category;
+    document.getElementById('customProductName').value = '';
+    document.getElementById('customProductModal').style.display = 'block';
+}
+
+function addCustomProduct() {
+    const name = document.getElementById('customProductName').value.trim();
+    const category = document.getElementById('customProductCategory').value;
+    
+    if (!name || !category) {
+        showNotification('Por favor completa todos los campos', 'error');
+        return;
+    }
+    
+    // Guardar producto personalizado
+    if (!state.customProducts[category]) {
+        state.customProducts[category] = [];
+    }
+    state.customProducts[category].push(name);
+    
+    // Actualizar UI
+    const container = document.querySelector(`.product-options[data-category="${category}"]`);
+    const newOption = document.createElement('label');
+    newOption.className = 'product-option';
+    newOption.innerHTML = `
+        <input type="radio" name="${category}" value="${name}">
+        <span class="product-icon"><i class="fas fa-flask"></i></span>
+        <span>${name}</span>
+    `;
+    container.appendChild(newOption);
+    
+    // Agregar evento
+    newOption.addEventListener('click', () => {
+        newOption.querySelector('input').checked = true;
+        selectProduct(category, name);
+    });
+    
+    // Guardar en localStorage
+    saveCustomProducts();
+    
+    // Cerrar modal
+    document.getElementById('customProductModal').style.display = 'none';
+    showNotification('Producto personalizado añadido', 'success');
+}
+
+function saveCustomProducts() {
+    if (!state.currentUser) return;
+    
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const userIndex = users.findIndex(u => u.id === state.currentUser.id);
+    
+    if (userIndex !== -1) {
+        users[userIndex].customProducts = state.customProducts;
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+}
+
+function loadCustomProducts() {
+    if (!state.currentUser) return;
+    
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.id === state.currentUser.id);
+    
+    if (user && user.customProducts) {
+        state.customProducts = user.customProducts;
         
-        // Actualizar UI con los productos personalizados del usuario
+        // Actualizar UI
+        Object.entries(user.customProducts).forEach(([category, products]) => {
+            const container = document.querySelector(`.product-options[data-category="${category}"]`);
+            if (container) {
+                products.forEach(product => {
+                    const newOption = document.createElement('label');
+                    newOption.className = 'product-option';
+                    newOption.innerHTML = `
+                        <input type="radio" name="${category}" value="${product}">
+                        <span class="product-icon"><i class="fas fa-flask"></i></span>
+                        <span>${product}</span>
+                    `;
+                    container.appendChild(newOption);
+                    
+                    // Agregar evento
+                    newOption.addEventListener('click', () => {
+                        newOption.querySelector('input').checked = true;
+                        selectProduct(category, product);
+                    });
+                });
+            }
+        });
+    }
+}
+
+// ========== GESTIÓN DE TABLAS ==========
+
+function createTable() {
+    const selectedCount = Object.keys(state.selectedProducts).length;
+    if (selectedCount === 0) {
+        showNotification('Selecciona al menos un producto', 'warning');
+        return;
+    }
+    
+    // Crear tabla
+    state.currentTable = {
+        id: null,
+        name: '',
+        products: [],
+        isPublic: false,
+        notes: {}
+    };
+    
+    // Agregar productos seleccionados
+    Object.entries(state.selectedProducts).forEach(([category, name]) => {
+        state.currentTable.products.push({
+            name,
+            category,
+            dosage: Array(10).fill('') // 10 semanas
+        });
+    });
+    
+    // Mostrar tabla
+    renderCurrentTable();
+    document.getElementById('tableCard').classList.remove('hidden');
+    document.getElementById('tableNameInput').focus();
+}
+
+function renderCurrentTable() {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+    
+    state.currentTable.products.forEach((product, productIndex) => {
+        const row = document.createElement('tr');
+        
+        // Celda de nombre
+        const nameCell = document.createElement('td');
+        nameCell.textContent = product.name;
+        row.appendChild(nameCell);
+        
+        // Celdas de dosificación
+        for (let week = 0; week < 10; week++) {
+            const cell = document.createElement('td');
+            const controls = document.createElement('div');
+            controls.className = 'controls';
+            
+            // Input de dosificación
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'input-dosage';
+            input.value = product.dosage[week] || '';
+            input.placeholder = 'ml/L';
+            input.dataset.product = productIndex;
+            input.dataset.week = week;
+            input.addEventListener('input', updateDosage);
+            
+            // Botón de notas
+            const notesBtn = document.createElement('button');
+            notesBtn.className = 'btn-notes';
+            notesBtn.innerHTML = '<i class="fas fa-sticky-note"></i>';
+            notesBtn.dataset.week = week + 1; // Para mostrar semana 1-10 en lugar de 0-9
+            notesBtn.addEventListener('click', () => showNotesModal(week + 1));
+            
+            controls.appendChild(input);
+            controls.appendChild(notesBtn);
+            cell.appendChild(controls);
+            row.appendChild(cell);
+        }
+        
+        tbody.appendChild(row);
+    });
+    
+    // Actualizar estado público/privado
+    document.getElementById('tablePublicToggle').checked = state.currentTable.isPublic;
+}
+
+function updateDosage(e) {
+    const productIndex = parseInt(e.target.dataset.product);
+    const week = parseInt(e.target.dataset.week);
+    state.currentTable.products[productIndex].dosage[week] = e.target.value;
+}
+
+function saveTable() {
+    const tableName = document.getElementById('tableNameInput').value.trim();
+    if (!tableName) {
+        showNotification('Por favor ingresa un nombre para la tabla', 'warning');
+        return;
+    }
+    
+    // Actualizar información de la tabla
+    state.currentTable.name = tableName;
+    state.currentTable.isPublic = document.getElementById('tablePublicToggle').checked;
+    
+    if (!state.currentTable.id) {
+        // Nueva tabla
+        state.currentTable.id = Date.now().toString();
+        state.currentTable.author = state.currentUser.username;
+        state.currentTable.createdAt = new Date().toISOString();
+        state.userTables.push(state.currentTable);
+    } else {
+        // Actualizar tabla existente
+        const index = state.userTables.findIndex(t => t.id === state.currentTable.id);
+        if (index !== -1) {
+            state.userTables[index] = state.currentTable;
+        }
+    }
+    
+    // Guardar en localStorage
+    saveUserTables();
+    showNotification('Tabla guardada correctamente', 'success');
+}
+
+function saveUserTables() {
+    if (!state.currentUser) return;
+    
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const userIndex = users.findIndex(u => u.id === state.currentUser.id);
+    
+    if (userIndex !== -1) {
+        users[userIndex].tables = state.userTables;
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+}
+
+function loadUserTables() {
+    if (!state.currentUser) return;
+    
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.id === state.currentUser.id);
+    
+    if (user) {
+        state.userTables = user.tables || [];
+        
+        // Cargar productos personalizados
+        state.customProducts = user.customProducts || {};
         loadCustomProducts();
     }
+}
 
-    // ==================== PRODUCTOS PERSONALIZADOS ====================
+function resetTableCreation() {
+    state.selectedProducts = {};
+    state.currentTable = { id: null, name: '', products: [], isPublic: false, notes: {} };
     
-    // Cargar productos personalizados
-    function loadCustomProducts() {
-        if (!currentUser.customProducts) {
-            currentUser.customProducts = [];
+    // Resetear selección de productos
+    document.querySelectorAll('.product-option').forEach(option => {
+        option.classList.remove('selected');
+        if (option.querySelector('input')) {
+            option.querySelector('input').checked = false;
         }
-
-        // Limpiar productos personalizados anteriores
-        document.querySelectorAll('.custom-product').forEach(el => el.remove());
-
-        // Añadir productos personalizados para cada categoría
-        currentUser.customProducts.forEach(product => {
-            const categoryContainer = document.querySelector(`.product-options[data-category="${product.category}"]`);
-            
-            if (categoryContainer) {
-                const productOption = document.createElement('label');
-                productOption.className = 'product-option custom-product';
-                
-                productOption.innerHTML = `
-                    <input type="radio" name="${product.category}" value="${product.name}">
-                    <span class="product-icon"><i class="fas fa-flask"></i></span>
-                    <span>${product.name}</span>
-                `;
-                
-                categoryContainer.appendChild(productOption);
-            }
-        });
-
-        // Volver a añadir event listeners a todas las opciones de productos
-        document.querySelectorAll('.product-option').forEach(option => {
-            option.addEventListener('click', function() {
-                const radio = this.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-                    
-                    // Desmarcar otras opciones en la misma categoría
-                    const categoryOptions = document.querySelectorAll(`input[name="${radio.name}"]`);
-                    categoryOptions.forEach(opt => {
-                        opt.closest('.product-option').classList.remove('selected');
-                    });
-                    
-                    // Marcar esta opción como seleccionada
-                    this.classList.add('selected');
-                }
-            });
-        });
-    }
-
-    // Event listeners para añadir productos personalizados
-    function initCustomProducts() {
-        // Botones para añadir producto personalizado
-        addCustomButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                currentCustomCategory = this.dataset.category;
-                
-                // Actualizar selector de categoría en el modal
-                const categorySelect = document.getElementById('customProductCategory');
-                categorySelect.value = currentCustomCategory;
-                
-                // Mostrar modal
-                openModal(customProductModal);
-            });
-        });
-
-        // Guardar producto personalizado
-        saveCustomProductBtn.addEventListener('click', function() {
-            const productName = document.getElementById('customProductName').value.trim();
-            const productCategory = document.getElementById('customProductCategory').value;
-            
-            if (!productName || !productCategory) {
-                showNotification('Por favor, completa todos los campos', 'error');
-                return;
-            }
-
-            // Comprobar si ya existe
-            if (!currentUser.customProducts) {
-                currentUser.customProducts = [];
-            }
-            
-            if (currentUser.customProducts.some(p => p.name === productName && p.category === productCategory)) {
-                showNotification('Este producto ya existe', 'error');
-                return;
-            }
-
-            // Añadir nuevo producto
-            currentUser.customProducts.push({
-                name: productName,
-                category: productCategory
-            });
-
-            // Actualizar usuario en localStorage
-            updateCurrentUser();
-            
-            // Actualizar UI
-            loadCustomProducts();
-            
-            // Cerrar modal y mostrar notificación
-            closeModal(customProductModal);
-            document.getElementById('customProductName').value = '';
-            showNotification(`Producto "${productName}" añadido correctamente`, 'success');
-        });
-    }
-
-    // ==================== TABLAS DE ABONADO ====================
+    });
     
-    // Inicializar manejo de tablas
-    function initTables() {
-        // Botón para crear tabla
-        createTableBtn.addEventListener('click', function() {
-            // Verificar si hay productos seleccionados
-            const selectedProducts = getSelectedProducts();
-            
-            if (selectedProducts.length === 0) {
-                showNotification('Selecciona al menos un producto', 'error');
-                return;
-            }
+    // Ocultar tabla
+    document.getElementById('tableCard').classList.add('hidden');
+}
 
-            // Mostrar tarjeta de tabla
-            tableCard.classList.remove('hidden');
-            
-            // Generar tabla
-            generateTable(selectedProducts);
-            
-            // Scroll hacia la tabla
-            tableCard.scrollIntoView({ behavior: 'smooth' });
-        });
-
-        // Botón para guardar tabla
-        saveTableBtn.addEventListener('click', function() {
-            const tableName = tableNameInput.value.trim();
-            
-            if (!tableName) {
-                showNotification('Introduce un nombre para la tabla', 'error');
-                return;
-            }
-
-            // Obtener datos de la tabla
-            const tableData = {
-                id: currentTableId || Date.now().toString(),
-                name: tableName,
-                products: getTableData()
-            };
-
-            // Guardar tabla
-            if (currentTableId) {
-                // Actualizar tabla existente
-                const tableIndex = currentUser.tables.findIndex(t => t.id === currentTableId);
-                if (tableIndex !== -1) {
-                    currentUser.tables[tableIndex] = tableData;
-                    showNotification(`Tabla "${tableName}" actualizada correctamente`, 'success');
-                }
-            } else {
-                // Crear nueva tabla
-                if (!currentUser.tables) {
-                    currentUser.tables = [];
-                }
-                currentUser.tables.push(tableData);
-                showNotification(`Tabla "${tableName}" guardada correctamente`, 'success');
-            }
-
-            // Actualizar usuario en localStorage
-            updateCurrentUser();
-        });
-
-        // Botón para crear nueva tabla
-        createNewTableBtn.addEventListener('click', function() {
-            resetTableForm();
-            tableCard.classList.add('hidden');
-            document.querySelector('.product-options').scrollIntoView({ behavior: 'smooth' });
-        });
-
-        // Botón para mostrar tablas guardadas
-        showSavedTablesBtn.addEventListener('click', function() {
-            loadSavedTables();
-            openModal(savedTablesModal);
-        });
-    }
-
-    // Obtener productos seleccionados
-    function getSelectedProducts() {
-        const selectedProducts = [];
-        const categories = ['abono', 'azucar', 'estimulador', 'tamano'];
-        
-        categories.forEach(category => {
-            const selectedRadio = document.querySelector(`input[name="${category}"]:checked`);
-            if (selectedRadio) {
-                selectedProducts.push({
-                    name: selectedRadio.value,
-                    category: category
-                });
-            }
-        });
-        
-        return selectedProducts;
-    }
-
-    // Generar tabla de abonado
-    function generateTable(products) {
-        const tableBody = document.getElementById('tableBody');
-        tableBody.innerHTML = '';
-        
-        products.forEach(product => {
-            const row = document.createElement('tr');
-            row.dataset.product = product.name;
-            
-            // Celda del nombre del producto
-            const nameCell = document.createElement('td');
-            nameCell.textContent = product.name;
-            row.appendChild(nameCell);
-            
-            // Celdas para cada semana (10 semanas)
-            for (let i = 1; i <= 10; i++) {
-                const cell = document.createElement('td');
-                cell.className = 'dosage-cell';
-                
-                // Contenedor para el input y botón de notas
-                const controls = document.createElement('div');
-                controls.className = 'controls';
-                
-                // Input para la dosis
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'input-dosage';
-                input.placeholder = '0 ml';
-                input.dataset.week = i;
-                input.dataset.product = product.name;
-                
-                // Botón para notas
-                const notesBtn = document.createElement('button');
-                notesBtn.className = 'btn-notes';
-                notesBtn.innerHTML = '<i class="fas fa-sticky-note"></i>';
-                notesBtn.dataset.week = i;
-                notesBtn.dataset.product = product.name;
-                
-                notesBtn.addEventListener('click', function() {
-                    openNotes(this.dataset.week, this.dataset.product);
-                });
-                
-                controls.appendChild(input);
-                controls.appendChild(notesBtn);
-                cell.appendChild(controls);
-                row.appendChild(cell);
-            }
-            
-            tableBody.appendChild(row);
-        });
-    }
-
-    // Obtener datos de la tabla actual
-    function getTableData() {
-        const products = [];
-        const rows = document.querySelectorAll('#tableBody tr');
-        
-        rows.forEach(row => {
-            const productName = row.dataset.product;
-            const dosages = [];
-            const notes = [];
-            
-            // Obtener dosis para cada semana
-            const inputs = row.querySelectorAll('.input-dosage');
-            inputs.forEach(input => {
-                dosages.push({
-                    week: parseInt(input.dataset.week),
-                    value: input.value
-                });
-            });
-            
-            // Buscar notas guardadas para este producto
-            if (currentTableId) {
-                const tableData = currentUser.tables.find(t => t.id === currentTableId);
-                if (tableData) {
-                    const productData = tableData.products.find(p => p.name === productName);
-                    if (productData && productData.notes) {
-                        productData.notes.forEach(note => {
-                            notes.push(note);
-                        });
-                    }
-                }
-            }
-            
-            products.push({
-                name: productName,
-                dosages: dosages,
-                notes: notes
-            });
-        });
-        
-        return products;
-    }
-
-    // Cargar datos de una tabla existente
-    function loadTable(tableId) {
-        const table = currentUser.tables.find(t => t.id === tableId);
-        
-        if (!table) return;
-        
-        currentTableId = tableId;
-        tableNameInput.value = table.name;
-        
-        // Desmarcar todos los productos
-        document.querySelectorAll('.product-option').forEach(option => {
-            option.classList.remove('selected');
-            option.querySelector('input[type="radio"]').checked = false;
-        });
-        
-        // Marcar productos seleccionados en la tabla
-        table.products.forEach(product => {
-            const radio = document.querySelector(`input[value="${product.name}"]`);
-            if (radio) {
-                radio.checked = true;
-                radio.closest('.product-option').classList.add('selected');
-            }
-        });
-        
-        // Generar tabla con los productos
-        const products = table.products.map(p => ({
-            name: p.name,
-            category: getProductCategory(p.name)
-        }));
-        
-        generateTable(products);
-        
-        // Llenar datos de dosis
-        table.products.forEach(product => {
-            product.dosages.forEach(dosage => {
-                const input = document.querySelector(`.input-dosage[data-product="${product.name}"][data-week="${dosage.week}"]`);
-                if (input) {
-                    input.value = dosage.value;
-                }
-            });
-        });
-        
-        // Mostrar tarjeta de tabla
-        tableCard.classList.remove('hidden');
-        tableCard.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Obtener categoría de un producto
-    function getProductCategory(productName) {
-        // Buscar en productos predefinidos
-        const categories = ['abono', 'azucar', 'estimulador', 'tamano'];
-        for (const category of categories) {
-            const radio = document.querySelector(`input[name="${category}"][value="${productName}"]`);
-            if (radio) {
-                return category;
-            }
-        }
-        
-        // Buscar en productos personalizados
-        const customProduct = currentUser.customProducts.find(p => p.name === productName);
-        return customProduct ? customProduct.category : '';
-    }
-
-    // Cargar lista de tablas guardadas
-    function loadSavedTables() {
-        const tablesList = document.getElementById('savedTablesList');
-        tablesList.innerHTML = '';
-        
-        if (!currentUser.tables || currentUser.tables.length === 0) {
-            tablesList.innerHTML = '<p>No tienes tablas guardadas</p>';
-            return;
-        }
-        
-        currentUser.tables.forEach(table => {
-            const tableItem = document.createElement('div');
-            tableItem.className = 'saved-table';
-            
-            tableItem.innerHTML = `
+function showSavedTablesModal() {
+    const container = document.getElementById('savedTablesList');
+    container.innerHTML = '';
+    
+    if (state.userTables.length === 0) {
+        container.innerHTML = '<p style="padding: 1rem; text-align: center;">No tienes tablas guardadas.</p>';
+    } else {
+        state.userTables.forEach(table => {
+            const tableEl = document.createElement('div');
+            tableEl.className = 'saved-table';
+            tableEl.innerHTML = `
                 <div class="saved-table-title">${table.name}</div>
                 <div class="saved-table-actions">
-                    <button class="edit-btn" data-id="${table.id}"><i class="fas fa-edit"></i></button>
-                    <button class="delete-btn" data-id="${table.id}"><i class="fas fa-trash"></i></button>
+                    <button class="edit-btn"><i class="fas fa-edit"></i></button>
+                    <button class="delete-btn"><i class="fas fa-trash-alt"></i></button>
                 </div>
             `;
             
-            // Evento para cargar tabla
-            tableItem.querySelector('.saved-table-title').addEventListener('click', function() {
-                loadTable(table.id);
-                closeModal(savedTablesModal);
-            });
+            // Evento para editar
+            tableEl.querySelector('.edit-btn').addEventListener('click', () => loadTableForEdit(table.id));
             
-            // Evento para editar tabla
-            tableItem.querySelector('.edit-btn').addEventListener('click', function(e) {
-                e.stopPropagation();
-                loadTable(this.dataset.id);
-                closeModal(savedTablesModal);
-            });
+            // Evento para eliminar
+            tableEl.querySelector('.delete-btn').addEventListener('click', () => deleteTable(table.id));
             
-            // Evento para eliminar tabla
-            tableItem.querySelector('.delete-btn').addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (confirm(`¿Seguro que quieres eliminar la tabla "${table.name}"?`)) {
-                    deleteTable(this.dataset.id);
+            // Evento para cargar al hacer clic en la tabla
+            tableEl.addEventListener('click', (e) => {
+                if (!e.target.closest('.saved-table-actions')) {
+                    loadTableForEdit(table.id);
                 }
             });
             
-            tablesList.appendChild(tableItem);
+            container.appendChild(tableEl);
         });
     }
+    
+    document.getElementById('savedTablesModal').style.display = 'block';
+}
 
-    // Eliminar tabla
-    function deleteTable(tableId) {
-        currentUser.tables = currentUser.tables.filter(t => t.id !== tableId);
-        updateCurrentUser();
-        loadSavedTables();
+function loadTableForEdit(tableId) {
+    const table = state.userTables.find(t => t.id === tableId);
+    if (table) {
+        state.currentTable = JSON.parse(JSON.stringify(table)); // Copia profunda
+        renderCurrentTable();
+        document.getElementById('tableNameInput').value = table.name;
+        document.getElementById('tableCard').classList.remove('hidden');
+        document.getElementById('savedTablesModal').style.display = 'none';
+    }
+}
+
+function deleteTable(tableId) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta tabla?')) {
+        state.userTables = state.userTables.filter(t => t.id !== tableId);
+        saveUserTables();
+        showSavedTablesModal(); // Recargar modal
         showNotification('Tabla eliminada correctamente', 'success');
     }
+}
 
-    // Resetear formulario de tabla
-    function resetTableForm() {
-        currentTableId = null;
-        tableNameInput.value = '';
-        
-        // Desmarcar todos los productos
-        document.querySelectorAll('.product-option').forEach(option => {
-            option.classList.remove('selected');
-            option.querySelector('input[type="radio"]').checked = false;
+// ========== NOTAS ==========
+
+function showNotesModal(week) {
+    document.getElementById('weekNumber').textContent = week;
+    document.getElementById('weekNotes').value = state.currentTable.notes[week] || '';
+    document.getElementById('notesModal').style.display = 'block';
+}
+
+function saveNotes() {
+    const week = document.getElementById('weekNumber').textContent;
+    const notes = document.getElementById('weekNotes').value.trim();
+    
+    if (notes) {
+        state.currentTable.notes[week] = notes;
+    } else {
+        delete state.currentTable.notes[week];
+    }
+    
+    document.getElementById('notesModal').style.display = 'none';
+    showNotification('Notas guardadas', 'success');
+}
+
+// ========== COMUNIDAD ==========
+
+function showCommunityModal() {
+    loadCommunityData();
+    document.getElementById('communityModal').style.display = 'block';
+}
+
+function switchModalTab(tab) {
+    const modal = event.target.closest('.modal');
+    modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    modal.querySelectorAll('.modal-tab-content').forEach(c => c.classList.remove('active'));
+    modal.querySelector(`.modal-tab[data-tab="${tab}"]`).classList.add('active');
+    modal.querySelector(`#${tab}Tab`).classList.add('active');
+}
+
+function loadCommunityData() {
+    // Cargar usuarios
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const usersList = document.getElementById('usersList');
+    usersList.innerHTML = '';
+    
+    users.forEach(user => {
+        if (user.id !== state.currentUser.id) {
+            const userEl = document.createElement('div');
+            userEl.className = 'saved-table';
+            userEl.innerHTML = `
+                <div class="saved-table-title">${user.username}</div>
+                <div class="saved-table-actions">
+                    <span>${(user.tables || []).filter(t => t.isPublic).length} tablas</span>
+                </div>
+            `;
+            
+            userEl.addEventListener('click', () => showUserProfile(user.id));
+            usersList.appendChild(userEl);
+        }
+    });
+    
+    // Cargar tablas públicas
+    const publicTables = [];
+    users.forEach(user => {
+        if (user.tables) {
+            user.tables.filter(t => t.isPublic).forEach(table => {
+                publicTables.push({...table, authorId: user.id});
+            });
+        }
+    });
+    
+    const publicTablesList = document.getElementById('publicTablesList');
+    publicTablesList.innerHTML = '';
+    
+    if (publicTables.length === 0) {
+        publicTablesList.innerHTML = '<p style="padding: 1rem; text-align: center;">No hay tablas públicas disponibles.</p>';
+    } else {
+        publicTables.forEach(table => {
+            const tableEl = document.createElement('div');
+            tableEl.className = 'saved-table';
+            tableEl.innerHTML = `
+                <div class="saved-table-title">${table.name}</div>
+                <div class="saved-table-actions">
+                    <span>por ${table.author}</span>
+                </div>
+            `;
+            
+            tableEl.addEventListener('click', () => viewTable(table));
+            publicTablesList.appendChild(tableEl);
         });
     }
+}
 
-    // ==================== NOTAS SEMANALES ====================
+function showUserProfile(userId) {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.id === userId);
     
-    // Abrir modal de notas
-    function openNotes(week, product) {
-        currentNoteWeek = week;
-        currentNoteProduct = product;
+    if (user) {
+        document.getElementById('profileUsername').textContent = user.username;
+        document.getElementById('userTablesCount').textContent = (user.tables || []).length;
         
-        // Actualizar título del modal
-        document.getElementById('weekNumber').textContent = week;
+        // Calcular rating (simulado)
+        const rating = Math.floor(Math.random() * 5) + 1;
+        document.getElementById('userRating').textContent = rating;
         
-        // Cargar nota si existe
-        let noteText = '';
+        // Mostrar tablas públicas
+        const publicTablesContainer = document.getElementById('userPublicTables');
+        publicTablesContainer.innerHTML = '';
         
-        if (currentTableId) {
-            const table = currentUser.tables.find(t => t.id === currentTableId);
-            if (table) {
-                const productData = table.products.find(p => p.name === product);
-                if (productData && productData.notes) {
-                    const note = productData.notes.find(n => n.week === parseInt(week));
-                    if (note) {
-                        noteText = note.text;
-                    }
-                }
-            }
-        }
+        const publicTables = (user.tables || []).filter(t => t.isPublic);
         
-        document.getElementById('weekNotes').value = noteText;
-        
-        // Mostrar modal
-        openModal(notesModal);
-    }
-
-    // Guardar nota
-    document.getElementById('saveNotesBtn').addEventListener('click', function() {
-        const noteText = document.getElementById('weekNotes').value.trim();
-        
-        if (!currentTableId) {
-            showNotification('Guarda la tabla primero para añadir notas', 'warning');
-            closeModal(notesModal);
-            return;
-        }
-        
-        // Buscar tabla actual
-        const tableIndex = currentUser.tables.findIndex(t => t.id === currentTableId);
-        if (tableIndex === -1) {
-            closeModal(notesModal);
-            return;
-        }
-        
-        // Buscar producto
-        const productIndex = currentUser.tables[tableIndex].products.findIndex(p => p.name === currentNoteProduct);
-        if (productIndex === -1) {
-            closeModal(notesModal);
-            return;
-        }
-        
-        // Inicializar array de notas si no existe
-        if (!currentUser.tables[tableIndex].products[productIndex].notes) {
-            currentUser.tables[tableIndex].products[productIndex].notes = [];
-        }
-        
-        // Buscar nota existente
-        const noteIndex = currentUser.tables[tableIndex].products[productIndex].notes.findIndex(n => n.week === parseInt(currentNoteWeek));
-        
-        if (noteIndex !== -1) {
-            // Actualizar nota existente
-            currentUser.tables[tableIndex].products[productIndex].notes[noteIndex].text = noteText;
+        if (publicTables.length === 0) {
+            publicTablesContainer.innerHTML = '<p style="padding: 1rem; text-align: center;">Este usuario no tiene tablas públicas.</p>';
         } else {
-            // Crear nueva nota
-            currentUser.tables[tableIndex].products[productIndex].notes.push({
-                week: parseInt(currentNoteWeek),
-                text: noteText
+            publicTables.forEach(table => {
+                const tableEl = document.createElement('div');
+                tableEl.className = 'saved-table';
+                tableEl.innerHTML = `
+                    <div class="saved-table-title">${table.name}</div>
+                    <div class="saved-table-actions">
+                        <span>${table.products.length} productos</span>
+                    </div>
+                `;
+                
+                tableEl.addEventListener('click', () => viewTable({...table, authorId: user.id}));
+                publicTablesContainer.appendChild(tableEl);
             });
         }
         
-        // Actualizar usuario en localStorage
-        updateCurrentUser();
-        
-        closeModal(notesModal);
-        showNotification('Nota guardada correctamente', 'success');
-    });
+        document.getElementById('communityModal').style.display = 'none';
+        document.getElementById('userProfileModal').style.display = 'block';
+    }
+}
 
-    // ==================== UTILIDADES ====================
+function viewTable(table) {
+    document.getElementById('viewTableName').textContent = table.name;
+    document.getElementById('viewTableAuthor').textContent = table.author;
     
-    // Actualizar usuario actual en localStorage
-    function updateCurrentUser() {
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    // Renderizar tabla
+    const tbody = document.getElementById('viewTableBody');
+    tbody.innerHTML = '';
+    
+    table.products.forEach(product => {
+        const row = document.createElement('tr');
         
-        // Actualizar lista de usuarios
-        const users = getUsers();
-        const userIndex = users.findIndex(u => u.username === currentUser.username);
+        // Celda de nombre
+        const nameCell = document.createElement('td');
+        nameCell.textContent = product.name;
+        row.appendChild(nameCell);
         
-        if (userIndex !== -1) {
-            users[userIndex] = currentUser;
-            saveUsers(users);
+        // Celdas de dosificación
+        for (let week = 0; week < 10; week++) {
+            const cell = document.createElement('td');
+            cell.textContent = product.dosage[week] || '-';
+            row.appendChild(cell);
         }
-    }
-
-    // Función para abrir modales
-    function openModal(modal) {
-        modal.style.display = 'block';
-    }
-
-    // Función para cerrar modales
-    function closeModal(modal) {
-        modal.style.display = 'none';
-    }
-
-    // Event listeners para cerrar modales
-    document.querySelectorAll('.close').forEach(closeBtn => {
-        closeBtn.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            closeModal(modal);
-        });
+        
+        tbody.appendChild(row);
     });
+    
+    // Guardar referencia para copiar o calificar
+    state.viewingTable = table;
+    
+    // Cerrar modales anteriores
+    document.getElementById('communityModal').style.display = 'none';
+    document.getElementById('userProfileModal').style.display = 'none';
+    
+    // Mostrar modal
+    document.getElementById('viewTableModal').style.display = 'block';
+}
 
-    // Cerrar modales al hacer clic fuera
-    window.addEventListener('click', function(e) {
-        document.querySelectorAll('.modal').forEach(modal => {
-            if (e.target === modal) {
-                closeModal(modal);
-            }
-        });
-    });
-
-    // Mostrar notificaciones
-    function showNotification(message, type = 'success') {
-        // Crear notificación
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
+function copyTableToMine() {
+    if (state.viewingTable) {
+        const tableCopy = JSON.parse(JSON.stringify(state.viewingTable));
+        delete tableCopy.authorId;
+        tableCopy.id = Date.now().toString();
+        tableCopy.name = `Copia de ${tableCopy.name}`;
+        tableCopy.author = state.currentUser.username;
+        tableCopy.isPublic = false;
         
-        let icon = 'check-circle';
-        if (type === 'error') icon = 'times-circle';
-        if (type === 'warning') icon = 'exclamation-triangle';
+        state.userTables.push(tableCopy);
+        saveUserTables();
         
-        notification.innerHTML = `
-            <i class="fas fa-${icon}"></i>
-            <span>${message}</span>
-        `;
-        
-        // Añadir al DOM
-        document.body.appendChild(notification);
-        
-        // Mostrar con animación
-        setTimeout(() => {
-            notification.classList.add('active');
-        }, 10);
-        
-        // Ocultar después de 3 segundos
-        setTimeout(() => {
-            notification.classList.remove('active');
-            setTimeout(() => {
-                notification.remove();
-            }, 300);
-        }, 3000);
+        document.getElementById('viewTableModal').style.display = 'none';
+        showNotification('Tabla copiada a tus tablas', 'success');
     }
+}
 
-    // Inicializar la aplicación
-    initAuth();
-    initCustomProducts();
-    initTables();
-});
+function filterUsers() {
+    const query = document.getElementById('userSearchInput').value.toLowerCase();
+    const users = document.querySelectorAll('#usersList .saved-table');
+    
+    users.forEach(user => {
+        const name = user.querySelector('.saved-table-title').textContent.toLowerCase();
+        user.style.display = name.includes(query) ? '' : 'none';
+    });
+}
+
+function filterPublicTables() {
+    const query = document.getElementById('tableSearchInput').value.toLowerCase();
+    const tables = document.querySelectorAll('#publicTablesList .saved-table');
+    
+    tables.forEach(table => {
+        const name = table.querySelector('.saved-table-title').textContent.toLowerCase();
+        table.style.display = name.includes(query) ? '' : 'none';
+    });
+}
+
+// ========== CALIFICACIONES ==========
+
+function showRatingModal() {
+    resetRating();
+    document.getElementById('ratingComment').value = '';
+    document.getElementById('viewTableModal').style.display = 'none';
+    document.getElementById('rateTableModal').style.display = 'block';
+}
+
+let currentRating = 0;
+
+function setRating(rating) {
+    currentRating = parseInt(rating);
+    document.getElementById('ratingValue').textContent = currentRating;
+    updateStars(currentRating);
+}
+
+function previewRating(rating) {
+    updateStars(parseInt(rating));
+}
+
+function resetRatingPreview() {
+    updateStars(currentRating);
+}
+
+function updateStars(rating) {
+    document.querySelectorAll('.star-rating i').forEach((star, index) => {
+        star.classList.toggle('active', index < rating);
+    });
+}
+
+function resetRating() {
+    currentRating = 0;
+    document.getElementById('ratingValue').textContent = '0';
+    document.querySelectorAll('.star-rating i').forEach(star => {
+        star.classList.remove('active');
+    });
+}
+
+function submitRating() {
+    if (!currentRating) {
+        showNotification('Por favor selecciona una calificación', 'warning');
+        return;
+    }
+    
+    // En una app real, esto enviaría la calificación a un servidor
+    const comment = document.getElementById('ratingComment').value;
+    
+    // Simular guardado
+    setTimeout(() => {
+        document.getElementById('rateTableModal').style.display = 'none';
+        showNotification('¡Gracias por tu calificación!', 'success');
+    }, 500);
+}
+
+// ========== UTILIDADES ==========
+
+function showNotification(message, type = 'info') {
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notificationText');
+    
+    notification.className = 'notification';
+    notification.classList.add(type);
+    notification.classList.add('active');
+    
+    notificationText.textContent = message;
+    
+    setTimeout(() => {
+        notification.classList.remove('active');
+    }, 3000);
+}
+
+function resetState() {
+    state.selectedProducts = {};
+    state.currentTable = { id: null, name: '', products: [], isPublic: false, notes: {} };
+    state.userTables = [];
+    state.customProducts = {};
+    document.getElementById('tableCard').classList.add('hidden');
+}
+
+// Iniciar la app
+init();
