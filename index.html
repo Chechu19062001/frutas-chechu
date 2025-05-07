@@ -72,6 +72,56 @@
         </div>
     </footer>
 
+    <!-- Scripts de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAfJlzVsMWrqJsgQcnUhwyGs4i2rJ5q9Rs",
+            authDomain: "frutas-df54c.firebaseapp.com",
+            projectId: "frutas-df54c",
+            storageBucket: "frutas-df54c.appspot.com",
+            messagingSenderId: "1089143195777",
+            appId: "1:1089143195777:web:e5a6ea115ba556f19d2580"
+        };
+
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Leer frutas de Firestore
+        db.collection("frutas").onSnapshot((snapshot) => {
+            const contenedor = document.querySelector('.productos');
+            contenedor.innerHTML = "";
+
+            if (snapshot.empty) {
+                contenedor.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><p>No hay frutas disponibles en este momento.</p></div>`;
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const fruta = doc.data();
+                const disponibleClass = fruta.disponible ? "disponible" : "no-disponible";
+
+                contenedor.innerHTML += `
+                    <div class="producto">
+                        <div class="producto-img-container">
+                            <img src="${fruta.imagen}" class="producto-img" />
+                        </div>
+                        <div class="producto-info">
+                            <h3 class="producto-nombre">${fruta.nombre}</h3>
+                            <p class="producto-descripcion">${fruta.descripcion}</p>
+                            <span class="producto-disponibilidad ${disponibleClass}">
+                                ${fruta.disponible ? "Disponible" : "No disponible"}
+                            </span>
+                        </div>
+                    </div>`;
+            });
+        });
+    </script>
+
+    <!-- Tu script principal -->
     <script src="script.js"></script>
 </body>
 </html>
