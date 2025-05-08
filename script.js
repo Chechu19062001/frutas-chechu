@@ -51,7 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
       editTable: document.getElementById('editTableModal'),
       profile: document.getElementById('userProfileModal'),
       myTables: document.getElementById('myTablesModal'),
-      levelUp: document.getElementById('levelUpModal')
+      levelUp: document.getElementById('levelUpModal'),
+      // Añadir referencia al nuevo modal
+      tablaAbonado: document.getElementById('modal-tabla-abonado')
     },
     creators: {
       weeksInput: document.getElementById('weeksNumber'),
@@ -99,6 +101,52 @@ document.addEventListener('DOMContentLoaded', () => {
       dom.welcome.classList.remove('hidden');
     }
     setupEventListeners();
+    
+    // Configuración para el modal de tabla de abonado
+    setupTablaAbonadoModal();
+  }
+  
+  // Función para configurar el modal de tabla de abonado
+  function setupTablaAbonadoModal() {
+    const modalTablaAbonado = document.querySelector('#modal-tabla-abonado');
+    
+    if (modalTablaAbonado) {
+      // Agregar evento personalizado para cuando se abra el modal
+      modalTablaAbonado.addEventListener('shown', function() {
+        // Al abrir el modal, añade clase para los estilos específicos
+        this.classList.add('tabla-abonado-modal');
+        
+        // Añadir clase a la tabla
+        const tabla = this.querySelector('table');
+        if (tabla) {
+          tabla.classList.add('tabla-abonado');
+          
+          // Envolver la tabla en un contenedor para scroll
+          const tableContainer = this.querySelector('.table-container');
+          if (tableContainer && !tableContainer.classList.contains('tabla-abonado-container')) {
+            tableContainer.classList.add('tabla-abonado-container');
+          }
+        }
+        
+        // Scroll automático al principio de la tabla
+        const tableContainer = this.querySelector('.table-container');
+        if (tableContainer) {
+          tableContainer.scrollLeft = 0;
+          tableContainer.scrollTop = 0;
+        }
+      });
+      
+      // Modificar la función openModal para disparar el evento 'shown'
+      const originalOpenModal = openModal;
+      openModal = function(modal) {
+        originalOpenModal(modal);
+        if (modal.id === 'modal-tabla-abonado') {
+          // Crear y disparar evento personalizado 'shown'
+          const event = new Event('shown');
+          modal.dispatchEvent(event);
+        }
+      };
+    }
   }
   
   // Funciones principales
@@ -157,6 +205,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.close').forEach(btn => {
       btn.addEventListener('click', () => closeModal(btn.closest('.modal')));
     });
+    
+    // Añadir eventos para el modal de tabla de abonado
+    if (dom.modals.tablaAbonado) {
+      // Puedes agregar aquí eventos específicos para botones dentro de este modal
+      const closeButton = dom.modals.tablaAbonado.querySelector('.close');
+      if (closeButton) {
+        closeButton.addEventListener('click', () => closeModal(dom.modals.tablaAbonado));
+      }
+    }
   }
   
   function startApp() {
@@ -330,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${product.name} (${product.unit})</td>`;
       
       for (let i = 0; i < weeks; i++) {
-        tableContent += `<td><input type="number" min="0" max="100" step="0.1" value="0"></td>`;
+        tableContent += `<td><input type="number" min="0" max="100" step="0.5" value="0"></td>`;
       }
       
       tableContent += '</tr>';
@@ -468,7 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${product.name} (${product.unit})</td>`;
       
       product.values.forEach((value, weekIndex) => {
-        tableContent += `<td><input type="number" min="0" max="100" step="0.1" value="${value}"></td>`;
+        tableContent += `<td><input type="number" min="0" max="100" step="0.5" value="${value}"></td>`;
       });
       
       tableContent += '</tr>';
