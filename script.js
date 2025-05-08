@@ -1,22 +1,25 @@
 /**
  * ChechuTablas - Script principal optimizado
- * Versión: 1.2
+ * Versión: 1.3
  */
 
-// Gestión de datos
+// Gestión de datos centralizada
 const DB = {
     currentUser: null,
     savedTables: [],
     publicTables: [],
     currentTableId: null,
+    syncInterval: null,
     
     // Guardar datos en localStorage
     saveData() {
         localStorage.setItem('chechuUser', this.currentUser);
         localStorage.setItem('chechuTables', JSON.stringify(this.savedTables));
         
-        // Guardar las tablas públicas en un espacio de almacenamiento compartido
-        localStorage.setItem('chechuSharedPublicTables', JSON.stringify(this.publicTables));
+        // Guardar tablas públicas en almacenamiento compartido simulado
+        if (this.publicTables.length > 0) {
+            localStorage.setItem('globalChechuPublicTables', JSON.stringify(this.publicTables));
+        }
     },
     
     // Cargar datos de localStorage
@@ -26,12 +29,12 @@ const DB = {
         try {
             this.savedTables = JSON.parse(localStorage.getItem('chechuTables')) || [];
             
-            // Cargar las tablas públicas del espacio compartido
-            const sharedPublicTables = JSON.parse(localStorage.getItem('chechuSharedPublicTables')) || [];
+            // Cargar tablas públicas del almacenamiento global
+            const globalPublicTables = JSON.parse(localStorage.getItem('globalChechuPublicTables')) || [];
             
             // Si hay tablas públicas compartidas, usarlas
-            if (sharedPublicTables.length > 0) {
-                this.publicTables = sharedPublicTables;
+            if (globalPublicTables.length > 0) {
+                this.publicTables = globalPublicTables;
             } else {
                 // Datos de ejemplo para tablas públicas iniciales
                 this.publicTables = [
@@ -82,10 +85,11 @@ const DB = {
                         ]
                     }
                 ];
-                this.saveData();
+                // Guardar tablas de ejemplo en almacenamiento global
+                localStorage.setItem('globalChechuPublicTables', JSON.stringify(this.publicTables));
             }
             
-            // Esta función sincroniza las tablas públicas periódicamente
+            // Iniciar sincronización periódica
             this.startSyncInterval();
             
         } catch (e) {
@@ -95,33 +99,37 @@ const DB = {
         }
     },
     
-    // Sincronizar tablas públicas periódicamente
+    // Iniciar intervalo de sincronización
     startSyncInterval() {
+        // Detener intervalo anterior si existe
+        if (this.syncInterval) {
+            clearInterval(this.syncInterval);
+        }
+        
         // Sincronizar inmediatamente al cargar
         this.syncPublicTables();
         
-        // Sincronizar cada 30 segundos
-        setInterval(() => {
+        // Establecer nuevo intervalo para sincronizar cada 30 segundos
+        this.syncInterval = setInterval(() => {
             this.syncPublicTables();
         }, 30000);
     },
     
-    // Sincronizar tablas públicas con el almacenamiento compartido
+    // Sincronizar tablas públicas con almacenamiento compartido
     syncPublicTables() {
         try {
-            const sharedTables = JSON.parse(localStorage.getItem('chechuSharedPublicTables')) || [];
+            // Obtener tablas públicas del almacenamiento global
+            const globalTables = JSON.parse(localStorage.getItem('globalChechuPublicTables')) || [];
             
-            // Si hay cambios en las tablas públicas, actualizar
-            if (JSON.stringify(sharedTables) !== JSON.stringify(this.publicTables)) {
-                // Actualizar solo si hay nuevas tablas o cambios
-                if (sharedTables.length >= this.publicTables.length) {
-                    this.publicTables = sharedTables;
-                    
-                    // Refrescar la lista de tablas públicas si el modal está abierto
-                    if (document.getElementById('publicTablesModal').classList.contains('active')) {
-                        const activeFilter = document.querySelector('.filter-btn.active')?.getAttribute('data-filter') || 'all';
-                        TableManager.loadPublicTablesList(activeFilter);
-                    }
+            // Comparar si hay cambios
+            if (JSON.stringify(globalTables) !== JSON.stringify(this.publicTables)) {
+                // Actualizar tablas locales con las globales
+                this.publicTables = globalTables;
+                
+                // Refrescar interfaz si el modal está abierto
+                if (document.getElementById('publicTablesModal').classList.contains('active')) {
+                    const activeFilter = document.querySelector('.filter-btn.active')?.getAttribute('data-filter') || 'all';
+                    TableManager.loadPublicTablesList(activeFilter);
                 }
             }
         } catch (e) {
@@ -130,7 +138,7 @@ const DB = {
     }
 };
 
-// Utilidades
+// Utilidades generales
 const Utils = {
     // Mostrar notificación
     showNotification(message, duration = 3000) {
@@ -181,6 +189,7 @@ const Modal = {
     
     // Configurar todos los modales
     setupModals() {
+        // Configurar botones de cierre
         document.querySelectorAll('.modal .close').forEach(closeBtn => {
             closeBtn.addEventListener('click', () => {
                 const modal = closeBtn.closest('.modal');
@@ -249,7 +258,7 @@ const TableManager = {
             productCell.textContent = product;
             row.appendChild(productCell);
             
-            // Generar valores según el tipo de producto y fase
+            // Generar valores según tipo de producto y fase
             for (let week = 1; week <= 10; week++) {
                 const cell = document.createElement('td');
                 cell.className = 'editable-cell';
@@ -257,7 +266,7 @@ const TableManager = {
                 
                 let value = '0';
                 
-                // Lógica simplificada para generar valores según fase y producto
+                // Lógica para generar valores según fase y producto
                 if (category === 'abono') {
                     if (week < 3) value = '0';
                     else if (week < 6) value = '1.5';
@@ -325,44 +334,7 @@ const TableManager = {
             Utils.showNotification('Tabla guardada correctamente');
         }
         
-	DB.startSyncInterval = function() {
-    // Detener el intervalo anterior si existe
-    if (this.syncInterval) {
-        clearInterval(this.syncInterval);
-    }
-    
-    // Establecer un nuevo intervalo para sincronizar cada 30 segundos
-    this.syncInterval = setInterval(() => {
-        this.syncPublicTables();
-    }, 30000); // 30 segundos
-};
-
-        DB.saveData = function() {
-    localStorage.setItem('chechuUser', this.currentUser);
-    localStorage.setItem('chechuTables', JSON.stringify(this.savedTables));
-    
-    // Guardar tablas públicas en un almacenamiento compartido simulado
-    if (this.publicTables.length > 0) {
-        const existingPublicTables = JSON.parse(localStorage.getItem('globalChechuPublicTables') || '[]');
-        
-        // Combinar tablas existentes con las nuevas, eliminando duplicados por ID
-        const combinedTables = [...existingPublicTables];
-        
-        this.publicTables.forEach(newTable => {
-            const existingIndex = combinedTables.findIndex(t => t.id === newTable.id);
-            if (existingIndex >= 0) {
-                // Actualizar tabla existente
-                combinedTables[existingIndex] = newTable;
-            } else {
-                // Añadir nueva tabla
-                combinedTables.push(newTable);
-            }
-        });
-        
-        // Guardar en el almacenamiento global simulado
-        localStorage.setItem('globalChechuPublicTables', JSON.stringify(combinedTables));
-    }
-};
+        DB.saveData();
     },
     
     // Serializar filas de la tabla
@@ -492,30 +464,6 @@ const TableManager = {
     
     // Cargar tablas públicas en el modal
     loadPublicTablesList(filter = 'all') {
-        // Sincronizar primero para asegurarnos de tener las tablas más recientes
-        DB.syncPublicTables = function() {
-    try {
-        // Obtener tablas públicas del almacenamiento global
-        const globalTables = JSON.parse(localStorage.getItem('globalChechuPublicTables')) || [];
-        
-        // Comparar si hay cambios
-        if (JSON.stringify(globalTables) !== JSON.stringify(this.publicTables)) {
-            // Actualizar nuestras tablas locales con las globales
-            this.publicTables = globalTables;
-            
-            // Refrescar la interfaz si el modal está abierto
-            if (document.getElementById('publicTablesModal').classList.contains('active')) {
-                const activeFilter = document.querySelector('.filter-btn.active')?.getAttribute('data-filter') || 'all';
-                TableManager.loadPublicTablesList(activeFilter);
-            }
-            
-            console.log("Tablas públicas sincronizadas:", this.publicTables.length);
-        }
-    } catch (e) {
-        console.error("Error al sincronizar tablas públicas:", e);
-    }
-};
-        
         const tablesList = document.getElementById('publicTablesList');
         tablesList.innerHTML = '';
         
@@ -678,7 +626,7 @@ const TableManager = {
         const description = document.getElementById('tableDescription').value.trim();
         const allowComments = document.getElementById('allowComments').checked;
         
-        // Crear copia para tablas públicas
+        // Crear objeto para tabla pública
         const publicTable = {
             id: 'pub_' + Utils.generateId(),
             name: table.name,
@@ -694,6 +642,9 @@ const TableManager = {
         
         // Añadir a tablas públicas
         DB.publicTables.push(publicTable);
+        
+        // Guardar en almacenamiento global y local
+        localStorage.setItem('globalChechuPublicTables', JSON.stringify(DB.publicTables));
         DB.saveData();
         
         Utils.showNotification('¡Tabla compartida con la comunidad!');
@@ -751,83 +702,7 @@ const CustomProductManager = {
 // Inicialización de la aplicación
 function initApp() {
     // Cargar datos almacenados
-    DB.loadData = function() {
-    this.currentUser = localStorage.getItem('chechuUser') || null;
-    
-    try {
-        this.savedTables = JSON.parse(localStorage.getItem('chechuTables')) || [];
-        
-        // Cargar las tablas públicas del espacio compartido global
-        const globalPublicTables = JSON.parse(localStorage.getItem('globalChechuPublicTables')) || [];
-        
-        // Si hay tablas públicas compartidas, usarlas
-        if (globalPublicTables.length > 0) {
-            this.publicTables = globalPublicTables;
-        } else {
-            // Datos de ejemplo para tablas públicas iniciales
-            this.publicTables = [
-                {
-                    id: 'pub1',
-                    name: 'AutoFlower Master',
-                    author: 'GreenThumb420',
-                    likes: 84,
-                    products: ['BIO BLOOM', 'BUD CANDY', 'TOP MAX'],
-                    description: 'Perfecta para variedades autoflorecientes en interior.',
-                    createdAt: '2025-04-15',
-                    rows: [
-                        {
-                            product: 'BIO BLOOM',
-                            values: ['0 ml/L', '0 ml/L', '1.5 ml/L', '1.5 ml/L', '1.5 ml/L', '3 ml/L', '3 ml/L', '3 ml/L', '0 ml/L', '0 ml/L']
-                        },
-                        {
-                            product: 'BUD CANDY',
-                            values: ['0 ml/L', '0 ml/L', '0 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '0 ml/L', '0 ml/L']
-                        },
-                        {
-                            product: 'TOP MAX',
-                            values: ['0 ml/L', '0 ml/L', '0 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '0 ml/L', '0 ml/L']
-                        }
-                    ]
-                },
-                {
-                    id: 'pub2',
-                    name: 'Power Bloom',
-                    author: 'CannaMaster',
-                    likes: 56,
-                    products: ['FLORA NOVA', 'CARBOLOAD', 'Bloombastic'],
-                    description: 'Potencia el crecimiento en la fase de floración.',
-                    createdAt: '2025-04-28',
-                    rows: [
-                        {
-                            product: 'FLORA NOVA',
-                            values: ['0 ml/L', '0 ml/L', '1.5 ml/L', '1.5 ml/L', '3 ml/L', '3 ml/L', '3 ml/L', '3 ml/L', '0 ml/L', '0 ml/L']
-                        },
-                        {
-                            product: 'CARBOLOAD',
-                            values: ['0 ml/L', '0 ml/L', '0 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '0 ml/L', '0 ml/L']
-                        },
-                        {
-                            product: 'Bloombastic',
-                            values: ['0 ml/L', '0 ml/L', '0 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '0 ml/L', '0 ml/L']
-                        }
-                    ]
-                }
-            ];
-            // Guardar las tablas de ejemplo en el almacenamiento global
-            localStorage.setItem('globalChechuPublicTables', JSON.stringify(this.publicTables));
-        }
-        
-        // Iniciar sincronización periódica
-        this.startSyncInterval();
-        
-    } catch (e) {
-        this.savedTables = [];
-        this.publicTables = [];
-        console.error("Error al cargar datos:", e);
-    }
-};
-
-
+    DB.loadData();
     
     // Si hay usuario guardado, saltar pantalla de bienvenida
     if (DB.currentUser) {
@@ -855,10 +730,8 @@ function initApp() {
         Utils.showNotification(`¡Bienvenido, ${username}!`);
     });
     
-    // Configurar modales
+    // Configurar modales y eventos
     Modal.setupModals();
-    
-    // Configurar productos personalizados
     CustomProductManager.setupCustomProducts();
     
     // Botones principales
@@ -884,19 +757,15 @@ function initApp() {
         Modal.open('publicTablesModal');
     });
     
-    // Configurar búsqueda de tablas públicas
+    // Configurar búsqueda y filtros de tablas públicas
     document.getElementById('searchPublicTables').addEventListener('input', (e) => {
-        // Obtener el filtro activo
         const activeFilter = document.querySelector('.filter-btn.active').getAttribute('data-filter');
         TableManager.loadPublicTablesList(activeFilter);
     });
     
-    // Configurar filtros de tablas públicas
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            // Desactivar todos los botones
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            // Activar botón actual
             btn.classList.add('active');
             
             const filter = btn.getAttribute('data-filter');
@@ -906,59 +775,13 @@ function initApp() {
     
     // Configurar compartir tabla
     document.getElementById('shareTableBtn').addEventListener('click', () => {
-        // Limpiar formulario de compartir
         document.getElementById('tableDescription').value = '';
         document.getElementById('allowComments').checked = true;
         Modal.open('shareTableModal');
     });
     
     document.getElementById('confirmShareBtn').addEventListener('click', () => {
-        TableManager.shareTable = function() {
-    if (!DB.currentTableId) {
-        Utils.showNotification('Primero debes crear o cargar una tabla');
-        return;
-    }
-    
-    const table = DB.savedTables.find(t => t.id === DB.currentTableId);
-    
-    if (!table) {
-        Utils.showNotification('No se encontró la tabla actual');
-        return;
-    }
-    
-    const description = document.getElementById('tableDescription').value.trim();
-    const allowComments = document.getElementById('allowComments').checked;
-    
-    // Crear objeto para tabla pública
-    const publicTable = {
-        id: 'pub_' + Utils.generateId(),
-        name: table.name,
-        author: DB.currentUser,
-        likes: 0,
-        products: [...table.products],
-        rows: JSON.parse(JSON.stringify(table.rows)), // Copia profunda
-        description: description,
-        allowComments: allowComments,
-        createdAt: new Date().toISOString(),
-        comments: []
-    };
-    
-    // Añadir a nuestras tablas públicas locales
-    DB.publicTables.push(publicTable);
-    
-    // Obtener las tablas públicas globales existentes
-    const globalTables = JSON.parse(localStorage.getItem('globalChechuPublicTables')) || [];
-    globalTables.push(publicTable);
-    
-    // Guardar en el almacenamiento global
-    localStorage.setItem('globalChechuPublicTables', JSON.stringify(globalTables));
-    
-    // Guardar también en nuestro almacenamiento local para mantener sincronizado
-    DB.saveData();
-    
-    Utils.showNotification('¡Tabla compartida con la comunidad!');
-    Modal.close('shareTableModal');
-};
+        TableManager.shareTable();
     });
     
     document.getElementById('cancelShareBtn').addEventListener('click', () => {
