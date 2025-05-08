@@ -41,21 +41,58 @@
                 <h1>CHECHU<span>tablas</span> <sup>CultivaTuFuturo</sup></h1>
             </div>
             <div class="header-right">
-                <div id="usernameDisplay"></div>
-                <button id="publicTablesBtn" class="btn-header">
-                    <i class="fas fa-globe"></i> Comunidad
+                <div id="userProfileMini" class="user-profile-mini">
+                    <div id="userLeagueIcon" class="user-league-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div id="usernameDisplay"></div>
+                    <div id="userLevelDisplay" class="user-level">Nivel 1</div>
+                </div>
+                <button id="showProfileBtn" class="btn-header">
+                    <i class="fas fa-user"></i> Mi Perfil
                 </button>
-                <button id="showSavedTablesBtn" class="btn-header">
-                    <i class="fas fa-save"></i> Mis Tablas
+                <button id="showTablesBtn" class="btn-header">
+                    <i class="fas fa-table"></i> Mis Tablas
                 </button>
             </div>
         </header>
         
         <div class="container">
-            <!-- Selector de productos -->
+            <!-- Sección de tablas activas -->
+            <div id="activeTables" class="card-section">
+                <h2><i class="fas fa-seedling"></i> Tablas en Progreso</h2>
+                <div id="activeTablesList" class="tables-grid">
+                    <!-- Se rellena con JavaScript -->
+                    <div class="empty-state">
+                        <i class="fas fa-leaf"></i>
+                        <p>No tienes tablas en progreso</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sección de tablas completadas -->
+            <div id="completedTables" class="card-section">
+                <h2><i class="fas fa-check-circle"></i> Cultivos Completados</h2>
+                <div id="completedTablesList" class="tables-grid">
+                    <!-- Se rellena con JavaScript -->
+                    <div class="empty-state">
+                        <i class="fas fa-award"></i>
+                        <p>No tienes cultivos completados aún</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Crear nueva tabla -->
             <div class="card product-card">
                 <div class="card-header">
-                    <h2><i class="fas fa-flask"></i> Crea tu tabla de abonado</h2>
+                    <h2><i class="fas fa-plus-circle"></i> Crea tu tabla de abonado</h2>
+                </div>
+                
+                <div class="week-selector">
+                    <h3><i class="fas fa-calendar-week"></i> Número de semanas</h3>
+                    <div class="input-group">
+                        <input type="number" id="weeksNumber" min="1" max="20" value="10">
+                    </div>
                 </div>
                 
                 <div class="product-selector">
@@ -63,12 +100,12 @@
                         <h3><i class="fas fa-leaf"></i> Abono Base</h3>
                         <div class="product-options" data-category="abono">
                             <label class="product-option">
-                                <input type="radio" name="abono" value="BIO BLOOM">
+                                <input type="checkbox" name="abono" value="BIO BLOOM">
                                 <span class="product-icon"><i class="fas fa-seedling"></i></span>
                                 <span>BIO BLOOM</span>
                             </label>
                             <label class="product-option">
-                                <input type="radio" name="abono" value="FLORA NOVA">
+                                <input type="checkbox" name="abono" value="FLORA NOVA">
                                 <span class="product-icon"><i class="fas fa-tint"></i></span>
                                 <span>FLORA NOVA</span>
                             </label>
@@ -82,22 +119,22 @@
                         <h3><i class="fas fa-cookie"></i> Azúcares</h3>
                         <div class="product-options" data-category="azucar">
                             <label class="product-option">
-                                <input type="radio" name="azucar" value="TOP CROP">
+                                <input type="checkbox" name="azucar" value="TOP CROP">
                                 <span class="product-icon"><i class="fas fa-fill-drip"></i></span>
                                 <span>TOP CROP</span>
                             </label>
                             <label class="product-option">
-                                <input type="radio" name="azucar" value="BUD CANDY">
+                                <input type="checkbox" name="azucar" value="BUD CANDY">
                                 <span class="product-icon"><i class="fas fa-candy-cane"></i></span>
                                 <span>BUD CANDY</span>
                             </label>
                             <label class="product-option">
-                                <input type="radio" name="azucar" value="CARBOLOAD">
+                                <input type="checkbox" name="azucar" value="CARBOLOAD">
                                 <span class="product-icon"><i class="fas fa-cookie-bite"></i></span>
                                 <span>CARBOLOAD</span>
                             </label>
                             <label class="product-option">
-                                <input type="radio" name="azucar" value="SUGAR SHOT">
+                                <input type="checkbox" name="azucar" value="SUGAR SHOT">
                                 <span class="product-icon"><i class="fas fa-burn"></i></span>
                                 <span>SUGAR SHOT</span>
                             </label>
@@ -111,12 +148,12 @@
                         <h3><i class="fas fa-rocket"></i> Estimuladores</h3>
                         <div class="product-options" data-category="estimulador">
                             <label class="product-option">
-                                <input type="radio" name="estimulador" value="TOP MAX">
+                                <input type="checkbox" name="estimulador" value="TOP MAX">
                                 <span class="product-icon"><i class="fas fa-bomb"></i></span>
                                 <span>TOP MAX</span>
                             </label>
                             <label class="product-option">
-                                <input type="radio" name="estimulador" value="Bloombastic">
+                                <input type="checkbox" name="estimulador" value="Bloombastic">
                                 <span class="product-icon"><i class="fas fa-meteor"></i></span>
                                 <span>Bloombastic</span>
                             </label>
@@ -130,12 +167,12 @@
                         <h3><i class="fas fa-expand-arrows-alt"></i> Tamaño</h3>
                         <div class="product-options" data-category="tamano">
                             <label class="product-option">
-                                <input type="radio" name="tamano" value="Monster Bloom">
+                                <input type="checkbox" name="tamano" value="Monster Bloom">
                                 <span class="product-icon"><i class="fas fa-arrows-alt-v"></i></span>
                                 <span>Monster Bloom</span>
                             </label>
                             <label class="product-option">
-                                <input type="radio" name="tamano" value="Blossom Builder">
+                                <input type="checkbox" name="tamano" value="Blossom Builder">
                                 <span class="product-icon"><i class="fas fa-kaaba"></i></span>
                                 <span>Blossom Builder</span>
                             </label>
@@ -147,99 +184,114 @@
                 </div>
                 
                 <div class="action-buttons">
+                    <button id="addCategoryBtn" class="btn btn-secondary">
+                        <i class="fas fa-folder-plus"></i> AÑADIR CATEGORÍA
+                    </button>
                     <button id="createTableBtn" class="btn glow-btn">
                         <i class="fas fa-magic"></i> GENERAR TABLA
                     </button>
                 </div>
             </div>
-            
-            <!-- Tabla generada -->
-            <div id="tableCard" class="card hidden">
-                <div class="card-header">
-                    <h2><i class="fas fa-table"></i> Tu tabla de abonado</h2>
-                </div>
-                
-                <div class="input-group table-name">
-                    <i class="fas fa-tag"></i>
-                    <input type="text" id="tableNameInput" placeholder="Nombre de la tabla">
-                </div>
-                
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Semana 1</th>
-                                <th>Semana 2</th>
-                                <th>Semana 3</th>
-                                <th>Semana 4</th>
-                                <th>Semana 5</th>
-                                <th>Semana 6</th>
-                                <th>Semana 7</th>
-                                <th>Semana 8</th>
-                                <th>Semana 9</th>
-                                <th>Semana 10</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <!-- Se rellena con JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="action-buttons">
-                    <button id="saveTableBtn" class="btn btn-save">
-                        <i class="fas fa-save"></i> GUARDAR TABLA
-                    </button>
-                    <button id="shareTableBtn" class="btn btn-share">
-                        <i class="fas fa-share-alt"></i> COMPARTIR
-                    </button>
-                    <button id="createNewTableBtn" class="btn btn-secondary">
-                        <i class="fas fa-plus"></i> CREAR NUEVA
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
     
-    <!-- Modal de tablas guardadas -->
-    <div id="savedTablesModal" class="modal">
+    <!-- Modal para añadir categoría personalizada -->
+    <div id="addCategoryModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-save"></i> Mis Tablas de Abonado</h2>
+                <h2><i class="fas fa-folder-plus"></i> Añadir Categoría</h2>
                 <span class="close">&times;</span>
             </div>
-            <div id="savedTablesList" class="tables-grid">
-                <!-- Se rellena con JavaScript -->
+            <div class="input-group">
+                <i class="fas fa-tag"></i>
+                <input type="text" id="newCategoryName" placeholder="Nombre de la categoría">
+            </div>
+            <div class="action-buttons">
+                <button id="saveCategoryBtn" class="btn">
+                    <i class="fas fa-plus-circle"></i> AÑADIR CATEGORÍA
+                </button>
             </div>
         </div>
     </div>
     
-    <!-- Modal de tabla individual -->
+    <!-- Modal para añadir producto personalizado -->
+    <div id="customProductModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-flask"></i> Añadir Producto Personalizado</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-tag"></i>
+                <input type="text" id="customProductName" placeholder="Nombre del producto">
+                <input type="hidden" id="customProductCategory">
+            </div>
+            <div class="select-group">
+                <i class="fas fa-tint"></i>
+                <select id="customProductUnit">
+                    <option value="ml/L">ml/L</option>
+                    <option value="g/L">g/L</option>
+                </select>
+            </div>
+            <div class="action-buttons">
+                <button id="saveCustomProductBtn" class="btn">
+                    <i class="fas fa-plus-circle"></i> AÑADIR PRODUCTO
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabla generada -->
+    <div id="tableCard" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-table"></i> Tu tabla de abonado</h2>
+                <span class="close">&times;</span>
+            </div>
+            
+            <div class="input-group table-name">
+                <i class="fas fa-tag"></i>
+                <input type="text" id="tableNameInput" placeholder="Nombre de la tabla">
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead id="tableHeader">
+                        <tr>
+                            <th>Producto</th>
+                            <!-- Las semanas se generarán con JavaScript -->
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Se rellena con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="saveTableBtn" class="btn btn-save">
+                    <i class="fas fa-save"></i> GUARDAR TABLA
+                </button>
+                <button id="closeTableBtn" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> CANCELAR
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para ver tabla -->
     <div id="viewTableModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="viewTableName">Nombre de la tabla</h2>
                 <span class="close">&times;</span>
             </div>
-            <div class="modal-subheader">
-                <p>Creada por: <span id="viewTableAuthor">Usuario</span></p>
-            </div>
             <div class="table-container">
                 <table>
-                    <thead>
+                    <thead id="viewTableHeader">
                         <tr>
                             <th>Producto</th>
-                            <th>Semana 1</th>
-                            <th>Semana 2</th>
-                            <th>Semana 3</th>
-                            <th>Semana 4</th>
-                            <th>Semana 5</th>
-                            <th>Semana 6</th>
-                            <th>Semana 7</th>
-                            <th>Semana 8</th>
-                            <th>Semana 9</th>
-                            <th>Semana 10</th>
+                            <!-- Las semanas se generarán con JavaScript -->
                         </tr>
                     </thead>
                     <tbody id="viewTableBody">
@@ -248,11 +300,45 @@
                 </table>
             </div>
             <div class="action-buttons">
-                <button id="copyToMyTablesBtn" class="btn">
-                    <i class="fas fa-copy"></i> COPIAR A MIS TABLAS
+                <button id="editTableBtn" class="btn">
+                    <i class="fas fa-edit"></i> EDITAR TABLA
                 </button>
-                <button id="likeTableBtn" class="btn btn-like">
-                    <i class="far fa-heart"></i> <span id="likeCount">0</span>
+                <button id="completeTableBtn" class="btn btn-success">
+                    <i class="fas fa-check-circle"></i> MARCAR COMO COMPLETADA
+                </button>
+                <button id="deleteTableBtn" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> ELIMINAR
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para ver tabla completada -->
+    <div id="viewCompletedTableModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="viewCompletedTableName">Nombre de la tabla</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="completed-badge">
+                <i class="fas fa-check-circle"></i> CULTIVO COMPLETADO
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead id="viewCompletedTableHeader">
+                        <tr>
+                            <th>Producto</th>
+                            <!-- Las semanas se generarán con JavaScript -->
+                        </tr>
+                    </thead>
+                    <tbody id="viewCompletedTableBody">
+                        <!-- Se rellena con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="action-buttons">
+                <button id="closeCompletedTableBtn" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> CERRAR
                 </button>
             </div>
         </div>
@@ -271,19 +357,10 @@
             </div>
             <div class="table-container">
                 <table>
-                    <thead>
+                    <thead id="editTableHeader">
                         <tr>
                             <th>Producto</th>
-                            <th>Semana 1</th>
-                            <th>Semana 2</th>
-                            <th>Semana 3</th>
-                            <th>Semana 4</th>
-                            <th>Semana 5</th>
-                            <th>Semana 6</th>
-                            <th>Semana 7</th>
-                            <th>Semana 8</th>
-                            <th>Semana 9</th>
-                            <th>Semana 10</th>
+                            <!-- Las semanas se generarán con JavaScript -->
                         </tr>
                     </thead>
                     <tbody id="editTableBody">
@@ -302,77 +379,129 @@
         </div>
     </div>
     
-    <!-- Modal de tablas públicas -->
-    <div id="publicTablesModal" class="modal">
+    <!-- Modal de perfil de usuario -->
+    <div id="userProfileModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-globe"></i> Comunidad GanjaGrow</h2>
+                <h2><i class="fas fa-user"></i> Mi Perfil</h2>
                 <span class="close">&times;</span>
             </div>
-            <div class="community-intro">
-                <p>Descubre tablas de cultivo compartidas por otros usuarios de la comunidad. Aprende de otros cultivadores y mejora tus cosechas.</p>
-            </div>
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchPublicTables" placeholder="Buscar tablas de cultivo...">
-            </div>
-            <div class="tables-filter">
-                <button class="filter-btn active" data-filter="all">Todas</button>
-                <button class="filter-btn" data-filter="popular">Populares</button>
-                <button class="filter-btn" data-filter="recent">Recientes</button>
-            </div>
-            <div id="publicTablesList" class="tables-grid">
-                <!-- Se rellena con JavaScript -->
+            <div class="profile-content">
+                <div class="profile-avatar">
+                    <div id="profileLeagueIcon" class="league-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="profileUsernameInput" placeholder="Tu nombre">
+                        <button id="saveUsernameBtn" class="btn-small">
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Nivel</span>
+                            <span id="profileLevel" class="stat-value">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Liga</span>
+                            <span id="profileLeague" class="stat-value">Bronce</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Cultivos completados</span>
+                            <span id="profileCompletedCultivos" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Experiencia</span>
+                            <div class="progress-bar">
+                                <div id="profileXpBar" class="progress" style="width: 0%"></div>
+                            </div>
+                            <span id="profileXp" class="stat-value">0/100 XP</span>
+                        </div>
+                    </div>
+                    <div class="leagues-info">
+                        <h3>Ligas</h3>
+                        <div class="league-items">
+                            <div class="league-item active">
+                                <i class="fas fa-seedling"></i>
+                                <span>Bronce (Nivel 1-2)</span>
+                            </div>
+                            <div class="league-item">
+                                <i class="fas fa-leaf"></i>
+                                <span>Plata (Nivel 3-4)</span>
+                            </div>
+                            <div class="league-item">
+                                <i class="fas fa-cannabis"></i>
+                                <span>Oro (Nivel 5-6)</span>
+                            </div>
+                            <div class="league-item">
+                                <i class="fas fa-gem"></i>
+                                <span>Platino (Nivel 7-8)</span>
+                            </div>
+                            <div class="league-item">
+                                <i class="fas fa-crown"></i>
+                                <span>Diamante (Nivel 9-10)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Modal para compartir tabla -->
-    <div id="shareTableModal" class="modal">
+    <!-- Modal de mis tablas -->
+    <div id="myTablesModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-share-alt"></i> Compartir con la comunidad</h2>
+                <h2><i class="fas fa-table"></i> Mis Tablas</h2>
                 <span class="close">&times;</span>
             </div>
-            <div class="share-intro">
-                <p>¡Comparte tu tabla de cultivo con la comunidad GanjaGrow y ayuda a otros cultivadores!</p>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="activeTabs">En Progreso</button>
+                <button class="tab-btn" data-tab="completedTabs">Completadas</button>
             </div>
-            <div class="input-group">
-                <i class="fas fa-comment-alt"></i>
-                <textarea id="tableDescription" placeholder="Añade una descripción o comentarios sobre tu tabla..." rows="4"></textarea>
+            <div id="activeTabs" class="tab-content active">
+                <div id="modalActiveTablesList" class="tables-grid">
+                    <!-- Se rellena con JavaScript -->
+                    <div class="empty-state">
+                        <i class="fas fa-leaf"></i>
+                        <p>No tienes tablas en progreso</p>
+                    </div>
+                </div>
             </div>
-            <div class="share-options">
-                <label class="checkbox-option">
-                    <input type="checkbox" id="allowComments" checked>
-                    <span>Permitir comentarios</span>
-                </label>
-            </div>
-            <div class="action-buttons">
-                <button id="confirmShareBtn" class="btn btn-share">
-                    <i class="fas fa-paper-plane"></i> PUBLICAR TABLA
-                </button>
-                <button id="cancelShareBtn" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> CANCELAR
-                </button>
+            <div id="completedTabs" class="tab-content">
+                <div id="modalCompletedTablesList" class="tables-grid">
+                    <!-- Se rellena con JavaScript -->
+                    <div class="empty-state">
+                        <i class="fas fa-award"></i>
+                        <p>No tienes cultivos completados aún</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Modal para añadir producto personalizado -->
-    <div id="customProductModal" class="modal">
+    <!-- Modal de nivel subido -->
+    <div id="levelUpModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-flask"></i> Añadir Producto Personalizado</h2>
-                <span class="close">&times;</span>
+            <div class="modal-header level-up-header">
+                <h2><i class="fas fa-level-up-alt"></i> ¡NIVEL SUBIDO!</h2>
             </div>
-            <div class="input-group">
-                <i class="fas fa-tag"></i>
-                <input type="text" id="customProductName" placeholder="Nombre del producto">
-                <input type="hidden" id="customProductCategory">
+            <div class="level-up-content">
+                <div class="level-up-icon">
+                    <i id="levelUpIcon" class="fas fa-cannabis"></i>
+                </div>
+                <div class="level-up-text">
+                    <h3>¡Enhorabuena!</h3>
+                    <p>Has alcanzado el <span id="newLevel">Nivel 2</span></p>
+                    <p id="newLeagueMessage" class="hidden">¡Has ascendido a la liga de <span id="newLeague">Plata</span>!</p>
+                </div>
             </div>
             <div class="action-buttons">
-                <button id="saveCustomProductBtn" class="btn">
-                    <i class="fas fa-plus-circle"></i> AÑADIR PRODUCTO
+                <button id="closeLevelUpBtn" class="btn glow-btn">
+                    <i class="fas fa-check"></i> CONTINUAR
                 </button>
             </div>
         </div>

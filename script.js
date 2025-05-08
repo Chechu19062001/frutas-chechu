@@ -1,818 +1,721 @@
-/**
- * ChechuTablas - Script principal optimizado
- * Versión: 1.3
- */
-
-// Gestión de datos centralizada
-const DB = {
-    currentUser: null,
-    savedTables: [],
-    publicTables: [],
-    currentTableId: null,
-    syncInterval: null,
-    
-    // Guardar datos en localStorage
-    saveData() {
-        localStorage.setItem('chechuUser', this.currentUser);
-        localStorage.setItem('chechuTables', JSON.stringify(this.savedTables));
-        
-        // Guardar tablas públicas en almacenamiento compartido simulado
-        if (this.publicTables.length > 0) {
-            localStorage.setItem('globalChechuPublicTables', JSON.stringify(this.publicTables));
-        }
+document.addEventListener('DOMContentLoaded', () => {
+  // Constantes y variables globales
+  const LS_PREFIX = 'chechu_';
+  const XP_PER_LEVEL = 100;
+  const LEAGUES = [
+    { name: 'Bronce', icon: 'seedling', minLevel: 1, maxLevel: 2 },
+    { name: 'Plata', icon: 'leaf', minLevel: 3, maxLevel: 4 },
+    { name: 'Oro', icon: 'cannabis', minLevel: 5, maxLevel: 6 },
+    { name: 'Platino', icon: 'gem', minLevel: 7, maxLevel: 8 },
+    { name: 'Diamante', icon: 'crown', minLevel: 9, maxLevel: 10 }
+  ];
+  
+  let user = loadUser() || { name: '', level: 1, xp: 0, tables: [], completedTables: [] };
+  let editingTableIndex = -1;
+  
+  // Elementos DOM
+  const dom = {
+    welcome: document.getElementById('welcomeScreen'),
+    app: document.getElementById('appContent'),
+    username: {
+      input: document.getElementById('usernameInput'),
+      display: document.getElementById('usernameDisplay'),
+      profile: document.getElementById('profileUsernameInput')
     },
-    
-    // Cargar datos de localStorage
-    loadData() {
-        this.currentUser = localStorage.getItem('chechuUser') || null;
-        
-        try {
-            this.savedTables = JSON.parse(localStorage.getItem('chechuTables')) || [];
-            
-            // Cargar tablas públicas del almacenamiento global
-            const globalPublicTables = JSON.parse(localStorage.getItem('globalChechuPublicTables')) || [];
-            
-            // Si hay tablas públicas compartidas, usarlas
-            if (globalPublicTables.length > 0) {
-                this.publicTables = globalPublicTables;
-            } else {
-                // Datos de ejemplo para tablas públicas iniciales
-                this.publicTables = [
-                    {
-                        id: 'pub1',
-                        name: 'AutoFlower Master',
-                        author: 'GreenThumb420',
-                        likes: 84,
-                        products: ['BIO BLOOM', 'BUD CANDY', 'TOP MAX'],
-                        description: 'Perfecta para variedades autoflorecientes en interior.',
-                        createdAt: '2025-04-15',
-                        rows: [
-                            {
-                                product: 'BIO BLOOM',
-                                values: ['0 ml/L', '0 ml/L', '1.5 ml/L', '1.5 ml/L', '1.5 ml/L', '3 ml/L', '3 ml/L', '3 ml/L', '0 ml/L', '0 ml/L']
-                            },
-                            {
-                                product: 'BUD CANDY',
-                                values: ['0 ml/L', '0 ml/L', '0 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '0 ml/L', '0 ml/L']
-                            },
-                            {
-                                product: 'TOP MAX',
-                                values: ['0 ml/L', '0 ml/L', '0 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '0 ml/L', '0 ml/L']
-                            }
-                        ]
-                    },
-                    {
-                        id: 'pub2',
-                        name: 'Power Bloom',
-                        author: 'CannaMaster',
-                        likes: 56,
-                        products: ['FLORA NOVA', 'CARBOLOAD', 'Bloombastic'],
-                        description: 'Potencia el crecimiento en la fase de floración.',
-                        createdAt: '2025-04-28',
-                        rows: [
-                            {
-                                product: 'FLORA NOVA',
-                                values: ['0 ml/L', '0 ml/L', '1.5 ml/L', '1.5 ml/L', '3 ml/L', '3 ml/L', '3 ml/L', '3 ml/L', '0 ml/L', '0 ml/L']
-                            },
-                            {
-                                product: 'CARBOLOAD',
-                                values: ['0 ml/L', '0 ml/L', '0 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '2 ml/L', '0 ml/L', '0 ml/L']
-                            },
-                            {
-                                product: 'Bloombastic',
-                                values: ['0 ml/L', '0 ml/L', '0 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '1 ml/L', '0 ml/L', '0 ml/L']
-                            }
-                        ]
-                    }
-                ];
-                // Guardar tablas de ejemplo en almacenamiento global
-                localStorage.setItem('globalChechuPublicTables', JSON.stringify(this.publicTables));
-            }
-            
-            // Iniciar sincronización periódica
-            this.startSyncInterval();
-            
-        } catch (e) {
-            this.savedTables = [];
-            this.publicTables = [];
-            console.error("Error al cargar datos:", e);
-        }
+    level: {
+      display: document.getElementById('userLevelDisplay'),
+      profile: document.getElementById('profileLevel'),
+      xpBar: document.getElementById('profileXpBar'),
+      xp: document.getElementById('profileXp')
     },
-    
-    // Iniciar intervalo de sincronización
-    startSyncInterval() {
-        // Detener intervalo anterior si existe
-        if (this.syncInterval) {
-            clearInterval(this.syncInterval);
-        }
-        
-        // Sincronizar inmediatamente al cargar
-        this.syncPublicTables();
-        
-        // Establecer nuevo intervalo para sincronizar cada 30 segundos
-        this.syncInterval = setInterval(() => {
-            this.syncPublicTables();
-        }, 30000);
+    league: {
+      icon: document.getElementById('userLeagueIcon'),
+      profileIcon: document.getElementById('profileLeagueIcon'),
+      name: document.getElementById('profileLeague')
     },
-    
-    // Sincronizar tablas públicas con almacenamiento compartido
-    syncPublicTables() {
-        try {
-            // Obtener tablas públicas del almacenamiento global
-            const globalTables = JSON.parse(localStorage.getItem('globalChechuPublicTables')) || [];
-            
-            // Comparar si hay cambios
-            if (JSON.stringify(globalTables) !== JSON.stringify(this.publicTables)) {
-                // Actualizar tablas locales con las globales
-                this.publicTables = globalTables;
-                
-                // Refrescar interfaz si el modal está abierto
-                if (document.getElementById('publicTablesModal').classList.contains('active')) {
-                    const activeFilter = document.querySelector('.filter-btn.active')?.getAttribute('data-filter') || 'all';
-                    TableManager.loadPublicTablesList(activeFilter);
-                }
-            }
-        } catch (e) {
-            console.error("Error al sincronizar tablas públicas:", e);
-        }
+    stats: {
+      completed: document.getElementById('profileCompletedCultivos')
+    },
+    tables: {
+      active: document.getElementById('activeTablesList'),
+      completed: document.getElementById('completedTablesList'),
+      modalActive: document.getElementById('modalActiveTablesList'),
+      modalCompleted: document.getElementById('modalCompletedTablesList')
+    },
+    modals: {
+      addCategory: document.getElementById('addCategoryModal'),
+      customProduct: document.getElementById('customProductModal'),
+      table: document.getElementById('tableCard'),
+      viewTable: document.getElementById('viewTableModal'),
+      viewCompleted: document.getElementById('viewCompletedTableModal'),
+      editTable: document.getElementById('editTableModal'),
+      profile: document.getElementById('userProfileModal'),
+      myTables: document.getElementById('myTablesModal'),
+      levelUp: document.getElementById('levelUpModal')
+    },
+    creators: {
+      weeksInput: document.getElementById('weeksNumber'),
+      categoryOptions: document.querySelectorAll('.product-options'),
+      newCategoryName: document.getElementById('newCategoryName'),
+      customProductName: document.getElementById('customProductName'),
+      customProductCategory: document.getElementById('customProductCategory'),
+      customProductUnit: document.getElementById('customProductUnit'),
+      tableName: document.getElementById('tableNameInput'),
+      tableHeader: document.getElementById('tableHeader'),
+      tableBody: document.getElementById('tableBody')
+    },
+    viewers: {
+      tableName: document.getElementById('viewTableName'),
+      tableHeader: document.getElementById('viewTableHeader'),
+      tableBody: document.getElementById('viewTableBody'),
+      completedName: document.getElementById('viewCompletedTableName'),
+      completedHeader: document.getElementById('viewCompletedTableHeader'),
+      completedBody: document.getElementById('viewCompletedTableBody')
+    },
+    editors: {
+      tableName: document.getElementById('editTableNameInput'),
+      tableHeader: document.getElementById('editTableHeader'),
+      tableBody: document.getElementById('editTableBody')
+    },
+    levelUp: {
+      icon: document.getElementById('levelUpIcon'),
+      level: document.getElementById('newLevel'),
+      leagueMsg: document.getElementById('newLeagueMessage'),
+      league: document.getElementById('newLeague')
+    },
+    loader: document.getElementById('loader'),
+    notification: document.getElementById('notification'),
+    notificationText: document.getElementById('notificationText')
+  };
+  
+  // Inicialización
+  initApp();
+  
+  function initApp() {
+    if (user.name) {
+      showApp();
+      updateUI();
+    } else {
+      dom.welcome.classList.remove('hidden');
     }
-};
-
-// Utilidades generales
-const Utils = {
-    // Mostrar notificación
-    showNotification(message, duration = 3000) {
-        const notification = document.getElementById('notification');
-        const notificationText = document.getElementById('notificationText');
-        
-        notificationText.textContent = message;
-        notification.classList.add('show');
-        
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, duration);
-    },
-    
-    // Mostrar/ocultar loader
-    toggleLoader(show) {
-        document.getElementById('loader').classList.toggle('hidden', !show);
-    },
-    
-    // Generar ID único
-    generateId() {
-        return 'id_' + Math.random().toString(36).substr(2, 9);
-    },
-    
-    // Formatear fecha
-    formatDate(date) {
-        return new Date(date).toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    }
-};
-
-// Gestor de modales
-const Modal = {
-    open(modalId) {
-        const modal = document.getElementById(modalId);
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    },
-    
-    close(modalId) {
-        const modal = document.getElementById(modalId);
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    },
-    
-    // Configurar todos los modales
-    setupModals() {
-        // Configurar botones de cierre
-        document.querySelectorAll('.modal .close').forEach(closeBtn => {
-            closeBtn.addEventListener('click', () => {
-                const modal = closeBtn.closest('.modal');
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
-            });
-        });
-        
-        // Cerrar al hacer clic fuera
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
-        });
-    }
-};
-
-// Gestor de tablas
-const TableManager = {
-    // Crear tabla de abonado
-    createFeedingTable() {
-        const selectedProducts = this.getSelectedProducts();
-        
-        if (Object.values(selectedProducts).filter(Boolean).length === 0) {
-            Utils.showNotification('Selecciona al menos un producto para generar la tabla');
-            return;
-        }
-        
-        Utils.toggleLoader(true);
-        
-        // Simulamos un pequeño retraso para dar sensación de procesamiento
-        setTimeout(() => {
-            this.populateTable(selectedProducts);
-            document.getElementById('tableCard').classList.remove('hidden');
-            document.getElementById('tableNameInput').focus();
-            Utils.toggleLoader(false);
-        }, 800);
-    },
-    
-    // Obtener productos seleccionados
-    getSelectedProducts() {
-        const products = {};
-        
-        document.querySelectorAll('.product-options input[type="radio"]:checked').forEach(radio => {
-            products[radio.name] = radio.value;
-        });
-        
-        return products;
-    },
-    
-    // Rellenar tabla con datos calculados
-    populateTable(products) {
-        const tableBody = document.getElementById('tableBody');
-        tableBody.innerHTML = '';
-        
-        Object.entries(products).forEach(([category, product]) => {
-            if (!product) return;
-            
-            const row = document.createElement('tr');
-            
-            // Celda de producto
-            const productCell = document.createElement('td');
-            productCell.textContent = product;
-            row.appendChild(productCell);
-            
-            // Generar valores según tipo de producto y fase
-            for (let week = 1; week <= 10; week++) {
-                const cell = document.createElement('td');
-                cell.className = 'editable-cell';
-                cell.contentEditable = true;
-                
-                let value = '0';
-                
-                // Lógica para generar valores según fase y producto
-                if (category === 'abono') {
-                    if (week < 3) value = '0';
-                    else if (week < 6) value = '1.5';
-                    else if (week < 9) value = '3';
-                    else value = '0';
-                } else if (category === 'azucar') {
-                    if (week < 4) value = '0';
-                    else if (week < 9) value = '2';
-                    else value = '0';
-                } else if (category === 'estimulador') {
-                    if (week > 3 && week < 9) value = '1';
-                    else value = '0';
-                } else if (category === 'tamano') {
-                    if (week > 5 && week < 9) value = '2';
-                    else value = '0';
-                }
-                
-                cell.textContent = value + ' ml/L';
-                row.appendChild(cell);
-            }
-            
-            tableBody.appendChild(row);
-        });
-        
-        DB.currentTableId = Utils.generateId();
-    },
-    
-    // Guardar tabla actual
-    saveCurrentTable() {
-        const tableName = document.getElementById('tableNameInput').value.trim();
-        
-        if (!tableName) {
-            Utils.showNotification('Por favor, dale un nombre a tu tabla');
-            document.getElementById('tableNameInput').focus();
-            return;
-        }
-        
-        // Recoger datos de la tabla
-        const products = [];
-        const rows = document.querySelectorAll('#tableBody tr');
-        
-        rows.forEach(row => {
-            const productName = row.querySelector('td').textContent;
-            products.push(productName);
-        });
-        
-        // Crear objeto de tabla
-        const tableData = {
-            id: DB.currentTableId || Utils.generateId(),
-            name: tableName,
-            author: DB.currentUser,
-            products: products,
-            rows: this.serializeTableRows(),
-            createdAt: new Date().toISOString()
-        };
-        
-        // Guardar en memoria y localStorage
-        const existingIndex = DB.savedTables.findIndex(t => t.id === tableData.id);
-        
-        if (existingIndex >= 0) {
-            DB.savedTables[existingIndex] = tableData;
-            Utils.showNotification('Tabla actualizada correctamente');
-        } else {
-            DB.savedTables.push(tableData);
-            Utils.showNotification('Tabla guardada correctamente');
-        }
-        
-        DB.saveData();
-    },
-    
-    // Serializar filas de la tabla
-    serializeTableRows() {
-        const rows = [];
-        document.querySelectorAll('#tableBody tr').forEach(tr => {
-            const rowData = {
-                product: tr.querySelector('td').textContent,
-                values: []
-            };
-            
-            tr.querySelectorAll('td:not(:first-child)').forEach(td => {
-                rowData.values.push(td.textContent);
-            });
-            
-            rows.push(rowData);
-        });
-        
-        return rows;
-    },
-    
-    // Cargar tabla guardada
-    loadTable(tableId) {
-        const table = DB.savedTables.find(t => t.id === tableId);
-        
-        if (!table) return;
-        
-        document.getElementById('tableNameInput').value = table.name;
-        const tableBody = document.getElementById('tableBody');
-        tableBody.innerHTML = '';
-        
-        table.rows.forEach(row => {
-            const tr = document.createElement('tr');
-            
-            // Celda de producto
-            const productCell = document.createElement('td');
-            productCell.textContent = row.product;
-            tr.appendChild(productCell);
-            
-            // Celdas de valores
-            row.values.forEach(value => {
-                const cell = document.createElement('td');
-                cell.className = 'editable-cell';
-                cell.contentEditable = true;
-                cell.textContent = value;
-                tr.appendChild(cell);
-            });
-            
-            tableBody.appendChild(tr);
-        });
-        
-        document.getElementById('tableCard').classList.remove('hidden');
-        DB.currentTableId = tableId;
-    },
-    
-    // Cargar tablas guardadas en el modal
-    loadSavedTablesList() {
-        const tablesList = document.getElementById('savedTablesList');
-        tablesList.innerHTML = '';
-        
-        if (DB.savedTables.length === 0) {
-            tablesList.innerHTML = '<p style="text-align: center; padding: 20px;">No tienes tablas guardadas aún</p>';
-            return;
-        }
-        
-        DB.savedTables.forEach(table => {
-            const tableCard = document.createElement('div');
-            tableCard.className = 'table-card';
-            
-            tableCard.innerHTML = `
-                <h3>${table.name}</h3>
-                <p>Productos: ${table.products.slice(0, 2).join(', ')}${table.products.length > 2 ? '...' : ''}</p>
-                <p>Creada: ${Utils.formatDate(table.createdAt)}</p>
-                <div class="table-card-actions">
-                    <button class="btn btn-view" data-id="${table.id}">
-                        <i class="fas fa-eye"></i> Ver
-                    </button>
-                    <button class="btn btn-edit" data-id="${table.id}">
-                        <i class="fas fa-edit"></i> Editar
-                    </button>
-                    <button class="btn btn-delete" data-id="${table.id}">
-                        <i class="fas fa-trash"></i> Borrar
-                    </button>
-                </div>
-            `;
-            
-            tablesList.appendChild(tableCard);
-        });
-        
-        // Configurar botones
-        this.setupTableButtons();
-    },
-    
-    // Configurar botones de las tablas
-    setupTableButtons() {
-        // Ver tabla
-        document.querySelectorAll('.btn-view').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tableId = btn.getAttribute('data-id');
-                Modal.close('savedTablesModal');
-                this.loadTable(tableId);
-            });
-        });
-        
-        // Editar tabla (mismo comportamiento que ver para esta versión)
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tableId = btn.getAttribute('data-id');
-                Modal.close('savedTablesModal');
-                this.loadTable(tableId);
-            });
-        });
-        
-        // Borrar tabla
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tableId = btn.getAttribute('data-id');
-                if (confirm('¿Estás seguro de que quieres eliminar esta tabla?')) {
-                    DB.savedTables = DB.savedTables.filter(t => t.id !== tableId);
-                    DB.saveData();
-                    this.loadSavedTablesList();
-                    Utils.showNotification('Tabla eliminada correctamente');
-                }
-            });
-        });
-    },
-    
-    // Cargar tablas públicas en el modal
-    loadPublicTablesList(filter = 'all') {
-        const tablesList = document.getElementById('publicTablesList');
-        tablesList.innerHTML = '';
-        
-        // Ordenar tablas según el filtro
-        let filteredTables = [...DB.publicTables];
-        
-        if (filter === 'popular') {
-            filteredTables.sort((a, b) => b.likes - a.likes);
-        } else if (filter === 'recent') {
-            filteredTables.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        }
-        
-        // Búsqueda
-        const searchTerm = document.getElementById('searchPublicTables').value.toLowerCase();
-        if (searchTerm) {
-            filteredTables = filteredTables.filter(table => 
-                table.name.toLowerCase().includes(searchTerm) || 
-                table.author.toLowerCase().includes(searchTerm) || 
-                (table.description && table.description.toLowerCase().includes(searchTerm)) ||
-                table.products.some(p => p.toLowerCase().includes(searchTerm))
-            );
-        }
-        
-        if (filteredTables.length === 0) {
-            tablesList.innerHTML = '<p style="text-align: center; padding: 20px;">No hay tablas que coincidan con tu búsqueda</p>';
-            return;
-        }
-        
-        filteredTables.forEach(table => {
-            const tableCard = document.createElement('div');
-            tableCard.className = 'table-card';
-            
-            tableCard.innerHTML = `
-                <h3>${table.name} <span class="public-badge">${table.likes} ♥</span></h3>
-                <p>Por: ${table.author}</p>
-                <p>${table.description || 'Sin descripción'}</p>
-                <p>Productos: ${table.products.join(', ')}</p>
-                <p>Fecha: ${Utils.formatDate(table.createdAt)}</p>
-                <div class="table-card-actions">
-                    <button class="btn btn-view-public" data-id="${table.id}">
-                        <i class="fas fa-eye"></i> Ver
-                    </button>
-                </div>
-            `;
-            
-            tablesList.appendChild(tableCard);
-        });
-        
-        // Configurar botones para ver tablas públicas
-        document.querySelectorAll('.btn-view-public').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tableId = btn.getAttribute('data-id');
-                this.viewPublicTable(tableId);
-            });
-        });
-    },
-    
-    // Ver tabla pública en detalle
-    viewPublicTable(tableId) {
-        const table = DB.publicTables.find(t => t.id === tableId);
-        
-        if (!table) return;
-        
-        // Llenar datos de la tabla
-        document.getElementById('viewTableName').textContent = table.name;
-        document.getElementById('viewTableAuthor').textContent = table.author;
-        document.getElementById('likeCount').textContent = table.likes;
-        
-        // Llenar la tabla
-        const tableBody = document.getElementById('viewTableBody');
-        tableBody.innerHTML = '';
-        
-        table.rows.forEach(row => {
-            const tr = document.createElement('tr');
-            
-            // Celda de producto
-            const productCell = document.createElement('td');
-            productCell.textContent = row.product;
-            tr.appendChild(productCell);
-            
-            // Celdas de valores
-            row.values.forEach(value => {
-                const cell = document.createElement('td');
-                cell.textContent = value;
-                tr.appendChild(cell);
-            });
-            
-            tableBody.appendChild(tr);
-        });
-        
-        // Configurar botón de like
-        const likeBtn = document.getElementById('likeTableBtn');
-        likeBtn.classList.remove('liked');
-        likeBtn.querySelector('i').className = 'far fa-heart';
-        
-        likeBtn.onclick = () => {
-            if (likeBtn.classList.contains('liked')) {
-                table.likes--;
-                likeBtn.classList.remove('liked');
-                likeBtn.querySelector('i').className = 'far fa-heart';
-            } else {
-                table.likes++;
-                likeBtn.classList.add('liked');
-                likeBtn.querySelector('i').className = 'fas fa-heart';
-            }
-            document.getElementById('likeCount').textContent = table.likes;
-            DB.saveData();
-        };
-        
-        // Configurar botón de copiar
-        document.getElementById('copyToMyTablesBtn').onclick = () => {
-            this.copyPublicTable(tableId);
-        };
-        
-        // Cerrar modal anterior si está abierto
-        Modal.close('publicTablesModal');
-        
-        // Abrir modal de visualización
-        Modal.open('viewTableModal');
-    },
-    
-    // Copiar tabla pública a tablas personales
-    copyPublicTable(tableId) {
-        const publicTable = DB.publicTables.find(t => t.id === tableId);
-        
-        if (!publicTable) return;
-        
-        // Crear copia para tablas personales
-        const newTable = {
-            id: Utils.generateId(),
-            name: `Copia de ${publicTable.name}`,
-            author: DB.currentUser,
-            products: [...publicTable.products],
-            rows: JSON.parse(JSON.stringify(publicTable.rows)), // Copia profunda
-            createdAt: new Date().toISOString()
-        };
-        
-        // Añadir a tablas personales
-        DB.savedTables.push(newTable);
-        DB.saveData();
-        
-        Utils.showNotification('Tabla copiada a tus tablas personales');
-        Modal.close('viewTableModal');
-    },
-    
-    // Compartir tabla con la comunidad
-    shareTable() {
-        if (!DB.currentTableId) {
-            Utils.showNotification('Primero debes crear o cargar una tabla');
-            return;
-        }
-        
-        const table = DB.savedTables.find(t => t.id === DB.currentTableId);
-        
-        if (!table) {
-            Utils.showNotification('No se encontró la tabla actual');
-            return;
-        }
-        
-        const description = document.getElementById('tableDescription').value.trim();
-        const allowComments = document.getElementById('allowComments').checked;
-        
-        // Crear objeto para tabla pública
-        const publicTable = {
-            id: 'pub_' + Utils.generateId(),
-            name: table.name,
-            author: DB.currentUser,
-            likes: 0,
-            products: [...table.products],
-            rows: JSON.parse(JSON.stringify(table.rows)), // Copia profunda
-            description: description,
-            allowComments: allowComments,
-            createdAt: new Date().toISOString(),
-            comments: []
-        };
-        
-        // Añadir a tablas públicas
-        DB.publicTables.push(publicTable);
-        
-        // Guardar en almacenamiento global y local
-        localStorage.setItem('globalChechuPublicTables', JSON.stringify(DB.publicTables));
-        DB.saveData();
-        
-        Utils.showNotification('¡Tabla compartida con la comunidad!');
-        Modal.close('shareTableModal');
-    }
-};
-
-// Gestor de productos personalizados
-const CustomProductManager = {
-    setupCustomProducts() {
-        document.querySelectorAll('.btn-add-custom').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const category = btn.getAttribute('data-category');
-                document.getElementById('customProductCategory').value = category;
-                Modal.open('customProductModal');
-            });
-        });
-        
-        document.getElementById('saveCustomProductBtn').addEventListener('click', () => {
-            this.addCustomProduct();
-        });
-    },
-    
-    addCustomProduct() {
-        const name = document.getElementById('customProductName').value.trim();
-        const category = document.getElementById('customProductCategory').value;
-        
-        if (!name) {
-            Utils.showNotification('Introduce un nombre para el producto');
-            return;
-        }
-        
-        const productOptions = document.querySelector(`.product-options[data-category="${category}"]`);
-        const label = document.createElement('label');
-        label.className = 'product-option';
-        
-        label.innerHTML = `
-            <input type="radio" name="${category}" value="${name}">
-            <span class="product-icon"><i class="fas fa-flask"></i></span>
-            <span>${name}</span>
-        `;
-        
-        productOptions.appendChild(label);
-        
-        // Seleccionar el nuevo producto
-        const radio = label.querySelector('input[type="radio"]');
-        radio.checked = true;
-        
-        Modal.close('customProductModal');
-        document.getElementById('customProductName').value = '';
-        Utils.showNotification(`Añadido "${name}" a ${category}`);
-    }
-};
-
-// Inicialización de la aplicación
-function initApp() {
-    // Cargar datos almacenados
-    DB.loadData();
-    
-    // Si hay usuario guardado, saltar pantalla de bienvenida
-    if (DB.currentUser) {
-        document.getElementById('welcomeScreen').classList.add('hidden');
-        document.getElementById('appContent').classList.remove('hidden');
-        document.getElementById('usernameDisplay').textContent = DB.currentUser;
-    }
-    
-    // Configurar inicio de sesión
-    document.getElementById('startAppBtn').addEventListener('click', () => {
-        const username = document.getElementById('usernameInput').value.trim();
-        
-        if (!username) {
-            Utils.showNotification('Por favor, escribe un nombre de usuario');
-            return;
-        }
-        
-        DB.currentUser = username;
-        DB.saveData();
-        
-        document.getElementById('welcomeScreen').classList.add('hidden');
-        document.getElementById('appContent').classList.remove('hidden');
-        document.getElementById('usernameDisplay').textContent = username;
-        
-        Utils.showNotification(`¡Bienvenido, ${username}!`);
-    });
-    
-    // Configurar modales y eventos
-    Modal.setupModals();
-    CustomProductManager.setupCustomProducts();
+    setupEventListeners();
+  }
+  
+  // Funciones principales
+  function setupEventListeners() {
+    // Eventos de bienvenida
+    document.getElementById('startAppBtn').addEventListener('click', startApp);
     
     // Botones principales
-    document.getElementById('createTableBtn').addEventListener('click', () => {
-        TableManager.createFeedingTable();
+    document.getElementById('showProfileBtn').addEventListener('click', () => openModal(dom.modals.profile));
+    document.getElementById('showTablesBtn').addEventListener('click', () => {
+      updateTablesLists();
+      openModal(dom.modals.myTables);
     });
     
-    document.getElementById('saveTableBtn').addEventListener('click', () => {
-        TableManager.saveCurrentTable();
+    // Eventos de creación de tablas
+    document.querySelectorAll('.btn-add-custom').forEach(btn => {
+      btn.addEventListener('click', () => {
+        dom.creators.customProductCategory.value = btn.dataset.category;
+        openModal(dom.modals.customProduct);
+      });
     });
     
-    document.getElementById('createNewTableBtn').addEventListener('click', () => {
-        document.getElementById('tableCard').classList.add('hidden');
+    document.getElementById('addCategoryBtn').addEventListener('click', () => openModal(dom.modals.addCategory));
+    document.getElementById('createTableBtn').addEventListener('click', generateTable);
+    document.getElementById('saveTableBtn').addEventListener('click', saveTable);
+    document.getElementById('closeTableBtn').addEventListener('click', () => closeModal(dom.modals.table));
+    
+    // Modales: Gestión de categorías y productos
+    document.getElementById('saveCategoryBtn').addEventListener('click', addCategory);
+    document.getElementById('saveCustomProductBtn').addEventListener('click', addCustomProduct);
+    
+    // Modales: Ver tabla
+    document.getElementById('editTableBtn').addEventListener('click', editTable);
+    document.getElementById('completeTableBtn').addEventListener('click', completeTable);
+    document.getElementById('deleteTableBtn').addEventListener('click', deleteTable);
+    
+    // Modales: Editar tabla
+    document.getElementById('updateTableBtn').addEventListener('click', updateTable);
+    document.getElementById('cancelEditBtn').addEventListener('click', () => closeModal(dom.modals.editTable));
+    
+    // Modales: Tabla completada
+    document.getElementById('closeCompletedTableBtn').addEventListener('click', () => closeModal(dom.modals.viewCompleted));
+    
+    // Modal de perfil
+    document.getElementById('saveUsernameBtn').addEventListener('click', saveUsername);
+    
+    // Modal de tablas
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
     
-    document.getElementById('showSavedTablesBtn').addEventListener('click', () => {
-        TableManager.loadSavedTablesList();
-        Modal.open('savedTablesModal');
+    // Modal de nivel subido
+    document.getElementById('closeLevelUpBtn').addEventListener('click', () => closeModal(dom.modals.levelUp));
+    
+    // Cerrar todos los modales con el botón X
+    document.querySelectorAll('.close').forEach(btn => {
+      btn.addEventListener('click', () => closeModal(btn.closest('.modal')));
+    });
+  }
+  
+  function startApp() {
+    const username = dom.username.input.value.trim();
+    if (!username) {
+      showNotification('Por favor, introduce un nombre');
+      return;
+    }
+    
+    user.name = username;
+    saveUser();
+    showApp();
+    updateUI();
+  }
+  
+  function showApp() {
+    dom.welcome.classList.add('hidden');
+    dom.app.classList.remove('hidden');
+  }
+  
+  function updateUI() {
+    // Actualizar información de usuario
+    dom.username.display.textContent = user.name;
+    dom.username.profile.value = user.name;
+    dom.level.display.textContent = `Nivel ${user.level}`;
+    dom.level.profile.textContent = user.level;
+    
+    // Calcular y mostrar XP
+    const xpForNextLevel = user.level * XP_PER_LEVEL;
+    const progress = (user.xp / xpForNextLevel) * 100;
+    dom.level.xpBar.style.width = `${progress}%`;
+    dom.level.xp.textContent = `${user.xp}/${xpForNextLevel} XP`;
+    
+    // Actualizar liga
+    const currentLeague = getCurrentLeague();
+    dom.league.name.textContent = currentLeague.name;
+    updateLeagueIcon(dom.league.icon, currentLeague.icon);
+    updateLeagueIcon(dom.league.profileIcon, currentLeague.icon);
+    
+    // Actualizar ligas en perfil
+    document.querySelectorAll('.league-item').forEach((item, index) => {
+      item.classList.toggle('active', index === currentLeague.index);
     });
     
-    document.getElementById('publicTablesBtn').addEventListener('click', () => {
-        TableManager.loadPublicTablesList();
-        Modal.open('publicTablesModal');
+    // Actualizar estadísticas
+    dom.stats.completed.textContent = user.completedTables.length;
+    
+    // Actualizar listas de tablas
+    updateTablesLists();
+  }
+  
+  function updateTablesLists() {
+    updateTablesList(dom.tables.active, dom.tables.modalActive, user.tables, showTableView);
+    updateTablesList(dom.tables.completed, dom.tables.modalCompleted, user.completedTables, showCompletedTableView);
+  }
+  
+  function updateTablesList(mainContainer, modalContainer, tablesList, clickHandler) {
+    // Limpiar contenedores
+    mainContainer.innerHTML = '';
+    modalContainer.innerHTML = '';
+    
+    if (tablesList.length === 0) {
+      const emptyState = document.createElement('div');
+      emptyState.className = 'empty-state';
+      
+      const icon = document.createElement('i');
+      icon.className = tablesList === user.tables ? 'fas fa-leaf' : 'fas fa-award';
+      
+      const text = document.createElement('p');
+      text.textContent = tablesList === user.tables 
+        ? 'No tienes tablas en progreso' 
+        : 'No tienes cultivos completados aún';
+      
+      emptyState.appendChild(icon);
+      emptyState.appendChild(text);
+      
+      mainContainer.appendChild(emptyState.cloneNode(true));
+      modalContainer.appendChild(emptyState);
+      return;
+    }
+    
+    // Crear tarjetas para cada tabla
+    tablesList.forEach((table, index) => {
+      const card = createTableCard(table, index, clickHandler);
+      mainContainer.appendChild(card.cloneNode(true));
+      modalContainer.appendChild(card);
     });
     
-    // Configurar búsqueda y filtros de tablas públicas
-    document.getElementById('searchPublicTables').addEventListener('input', (e) => {
-        const activeFilter = document.querySelector('.filter-btn.active').getAttribute('data-filter');
-        TableManager.loadPublicTablesList(activeFilter);
+    // Añadir eventos a las tarjetas
+    document.querySelectorAll('.table-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const index = parseInt(card.dataset.index);
+        const isCompleted = card.dataset.completed === 'true';
+        
+        if (isCompleted) {
+          showCompletedTableView(index);
+        } else {
+          showTableView(index);
+        }
+      });
     });
+  }
+  
+  function createTableCard(table, index, clickHandler) {
+    const card = document.createElement('div');
+    card.className = 'table-card';
+    card.dataset.index = index;
+    card.dataset.completed = table.completed ? 'true' : 'false';
     
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            const filter = btn.getAttribute('data-filter');
-            TableManager.loadPublicTablesList(filter);
+    const header = document.createElement('div');
+    header.className = 'card-header';
+    
+    const title = document.createElement('h3');
+    title.textContent = table.name || 'Tabla sin nombre';
+    
+    const icon = document.createElement('i');
+    icon.className = table.completed ? 'fas fa-check-circle' : 'fas fa-seedling';
+    
+    header.appendChild(icon);
+    header.appendChild(title);
+    card.appendChild(header);
+    
+    if (table.completed) {
+      const badge = document.createElement('div');
+      badge.className = 'completed-badge-small';
+      badge.innerHTML = '<i class="fas fa-check"></i> Completado';
+      card.appendChild(badge);
+    }
+    
+    return card;
+  }
+  
+  // Funciones para tablas
+  function generateTable() {
+    const weeks = parseInt(dom.creators.weeksInput.value) || 10;
+    const selectedProducts = [];
+    
+    // Recoger productos seleccionados
+    dom.creators.categoryOptions.forEach(category => {
+      const categoryName = category.dataset.category;
+      const checkboxes = category.querySelectorAll('input[type="checkbox"]:checked');
+      
+      checkboxes.forEach(checkbox => {
+        selectedProducts.push({
+          name: checkbox.value,
+          category: categoryName,
+          unit: categoryName === 'tamano' && checkbox.value === 'Monster Bloom' ? 'g/L' : 'ml/L',
+          values: Array(weeks).fill(0)
         });
+      });
     });
     
-    // Configurar compartir tabla
-    document.getElementById('shareTableBtn').addEventListener('click', () => {
-        document.getElementById('tableDescription').value = '';
-        document.getElementById('allowComments').checked = true;
-        Modal.open('shareTableModal');
+    // Verificar si hay productos seleccionados
+    if (selectedProducts.length === 0) {
+      showNotification('Selecciona al menos un producto');
+      return;
+    }
+    
+    // Generar encabezados de tabla
+    let headerRow = '<tr><th>Producto</th>';
+    for (let i = 1; i <= weeks; i++) {
+      headerRow += `<th>Sem ${i}</th>`;
+    }
+    headerRow += '</tr>';
+    dom.creators.tableHeader.innerHTML = headerRow;
+    
+    // Generar filas de tabla
+    let tableContent = '';
+    selectedProducts.forEach((product, index) => {
+      tableContent += `<tr data-product-index="${index}">
+        <td>${product.name} (${product.unit})</td>`;
+      
+      for (let i = 0; i < weeks; i++) {
+        tableContent += `<td><input type="number" min="0" max="100" step="0.1" value="0"></td>`;
+      }
+      
+      tableContent += '</tr>';
     });
     
-    document.getElementById('confirmShareBtn').addEventListener('click', () => {
-        TableManager.shareTable();
+    dom.creators.tableBody.innerHTML = tableContent;
+    dom.creators.tableName.value = '';
+    
+    openModal(dom.modals.table);
+  }
+  
+  function saveTable() {
+    const tableName = dom.creators.tableName.value.trim() || `Tabla ${user.tables.length + 1}`;
+    const products = [];
+    
+    // Recoger productos y valores
+    const rows = dom.creators.tableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      const productText = cells[0].textContent;
+      
+      const name = productText.substring(0, productText.lastIndexOf('(')).trim();
+      const unit = productText.substring(productText.lastIndexOf('(') + 1, productText.lastIndexOf(')')).trim();
+      
+      const values = [];
+      for (let i = 1; i < cells.length; i++) {
+        const input = cells[i].querySelector('input');
+        values.push(parseFloat(input.value) || 0);
+      }
+      
+      products.push({ name, unit, values });
     });
     
-    document.getElementById('cancelShareBtn').addEventListener('click', () => {
-        Modal.close('shareTableModal');
+    // Crear nueva tabla
+    const newTable = {
+      name: tableName,
+      weeks: products[0].values.length,
+      products,
+      completed: false,
+      date: new Date().toISOString()
+    };
+    
+    // Guardar tabla
+    user.tables.push(newTable);
+    saveUser();
+    updateTablesLists();
+    closeModal(dom.modals.table);
+    showNotification('Tabla guardada correctamente');
+    
+    // Añadir XP
+    addXP(10);
+  }
+  
+  function showTableView(index) {
+    const table = user.tables[index];
+    if (!table) return;
+    
+    editingTableIndex = index;
+    dom.viewers.tableName.textContent = table.name;
+    
+    // Generar encabezados
+    let headerRow = '<tr><th>Producto</th>';
+    for (let i = 1; i <= table.weeks; i++) {
+      headerRow += `<th>Sem ${i}</th>`;
+    }
+    headerRow += '</tr>';
+    dom.viewers.tableHeader.innerHTML = headerRow;
+    
+    // Generar filas
+    let tableContent = '';
+    table.products.forEach(product => {
+      tableContent += `<tr>
+        <td>${product.name} (${product.unit})</td>`;
+      
+      product.values.forEach(value => {
+        tableContent += `<td>${value}</td>`;
+      });
+      
+      tableContent += '</tr>';
     });
     
-    // Permitir enviar formularios con Enter
-    document.getElementById('usernameInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            document.getElementById('startAppBtn').click();
-        }
+    dom.viewers.tableBody.innerHTML = tableContent;
+    openModal(dom.modals.viewTable);
+  }
+  
+  function showCompletedTableView(index) {
+    const table = user.completedTables[index];
+    if (!table) return;
+    
+    dom.viewers.completedName.textContent = table.name;
+    
+    // Generar encabezados
+    let headerRow = '<tr><th>Producto</th>';
+    for (let i = 1; i <= table.weeks; i++) {
+      headerRow += `<th>Sem ${i}</th>`;
+    }
+    headerRow += '</tr>';
+    dom.viewers.completedHeader.innerHTML = headerRow;
+    
+    // Generar filas
+    let tableContent = '';
+    table.products.forEach(product => {
+      tableContent += `<tr>
+        <td>${product.name} (${product.unit})</td>`;
+      
+      product.values.forEach(value => {
+        tableContent += `<td>${value}</td>`;
+      });
+      
+      tableContent += '</tr>';
     });
     
-    document.getElementById('customProductName').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            document.getElementById('saveCustomProductBtn').click();
-        }
+    dom.viewers.completedBody.innerHTML = tableContent;
+    openModal(dom.modals.viewCompleted);
+  }
+  
+  function editTable() {
+    const table = user.tables[editingTableIndex];
+    if (!table) return;
+    
+    dom.editors.tableName.value = table.name;
+    
+    // Generar encabezados
+    let headerRow = '<tr><th>Producto</th>';
+    for (let i = 1; i <= table.weeks; i++) {
+      headerRow += `<th>Sem ${i}</th>`;
+    }
+    headerRow += '</tr>';
+    dom.editors.tableHeader.innerHTML = headerRow;
+    
+    // Generar filas
+    let tableContent = '';
+    table.products.forEach((product, productIndex) => {
+      tableContent += `<tr data-product-index="${productIndex}">
+        <td>${product.name} (${product.unit})</td>`;
+      
+      product.values.forEach((value, weekIndex) => {
+        tableContent += `<td><input type="number" min="0" max="100" step="0.1" value="${value}"></td>`;
+      });
+      
+      tableContent += '</tr>';
     });
     
-    document.getElementById('searchPublicTables').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault(); // Evitar recarga
-        }
+    dom.editors.tableBody.innerHTML = tableContent;
+    closeModal(dom.modals.viewTable);
+    openModal(dom.modals.editTable);
+  }
+  
+  function updateTable() {
+    const table = user.tables[editingTableIndex];
+    if (!table) return;
+    
+    table.name = dom.editors.tableName.value.trim() || table.name;
+    
+    // Actualizar valores
+    const rows = dom.editors.tableBody.querySelectorAll('tr');
+    rows.forEach((row, rowIndex) => {
+      const product = table.products[rowIndex];
+      const inputs = row.querySelectorAll('input');
+      
+      inputs.forEach((input, weekIndex) => {
+        product.values[weekIndex] = parseFloat(input.value) || 0;
+      });
     });
     
-    document.getElementById('tableDescription').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && e.ctrlKey) {
-            document.getElementById('confirmShareBtn').click();
-        }
+    saveUser();
+    updateTablesLists();
+    closeModal(dom.modals.editTable);
+    showNotification('Tabla actualizada correctamente');
+  }
+  
+  function completeTable() {
+    const table = user.tables[editingTableIndex];
+    if (!table) return;
+    
+    // Mover a completadas
+    table.completed = true;
+    table.completionDate = new Date().toISOString();
+    user.completedTables.push(table);
+    user.tables.splice(editingTableIndex, 1);
+    
+    saveUser();
+    updateTablesLists();
+    closeModal(dom.modals.viewTable);
+    showNotification('¡Cultivo completado! Has ganado 50 XP');
+    
+    // Añadir XP
+    addXP(50);
+  }
+  
+  function deleteTable() {
+    if (confirm('¿Estás seguro de eliminar esta tabla?')) {
+      user.tables.splice(editingTableIndex, 1);
+      saveUser();
+      updateTablesLists();
+      closeModal(dom.modals.viewTable);
+      showNotification('Tabla eliminada');
+    }
+  }
+  
+  // Funciones para categorías y productos
+  function addCategory() {
+    const categoryName = dom.creators.newCategoryName.value.trim();
+    if (!categoryName) {
+      showNotification('Introduce un nombre para la categoría');
+      return;
+    }
+    
+    // Crear nueva categoría
+    const productSelector = document.querySelector('.product-selector');
+    const categoryId = categoryName.toLowerCase().replace(/\s+/g, '');
+    
+    const category = document.createElement('div');
+    category.className = 'product-category';
+    category.innerHTML = `
+      <h3><i class="fas fa-folder"></i> ${categoryName}</h3>
+      <div class="product-options" data-category="${categoryId}"></div>
+      <button class="btn-add-custom" data-category="${categoryId}">
+          <i class="fas fa-plus-circle"></i> Añadir personalizado
+      </button>
+    `;
+    
+    productSelector.appendChild(category);
+    
+    // Añadir evento al botón
+    const addButton = category.querySelector('.btn-add-custom');
+    addButton.addEventListener('click', () => {
+      dom.creators.customProductCategory.value = categoryId;
+      openModal(dom.modals.customProduct);
     });
-}
-
-// Iniciar cuando el DOM esté completamente cargado
-document.addEventListener('DOMContentLoaded', initApp);
+    
+    closeModal(dom.modals.addCategory);
+    dom.creators.newCategoryName.value = '';
+    showNotification(`Categoría ${categoryName} añadida`);
+  }
+  
+  function addCustomProduct() {
+    const productName = dom.creators.customProductName.value.trim();
+    const category = dom.creators.customProductCategory.value;
+    const unit = dom.creators.customProductUnit.value;
+    
+    if (!productName || !category) {
+      showNotification('Introduce un nombre para el producto');
+      return;
+    }
+    
+    // Buscar contenedor de categoría
+    const categoryContainer = document.querySelector(`.product-options[data-category="${category}"]`);
+    if (!categoryContainer) return;
+    
+    // Crear nuevo producto
+    const productOption = document.createElement('label');
+    productOption.className = 'product-option';
+    productOption.innerHTML = `
+      <input type="checkbox" name="${category}" value="${productName}">
+      <span class="product-icon"><i class="fas fa-flask"></i></span>
+      <span>${productName}</span>
+    `;
+    
+    categoryContainer.appendChild(productOption);
+    closeModal(dom.modals.customProduct);
+    dom.creators.customProductName.value = '';
+    showNotification(`Producto ${productName} añadido`);
+  }
+  
+  // Funciones para el perfil de usuario
+  function saveUsername() {
+    const newName = dom.username.profile.value.trim();
+    if (!newName) {
+      showNotification('El nombre no puede estar vacío');
+      return;
+    }
+    
+    user.name = newName;
+    saveUser();
+    updateUI();
+    showNotification('Nombre actualizado');
+  }
+  
+  function addXP(amount) {
+    const oldLevel = user.level;
+    user.xp += amount;
+    
+    // Comprobar si sube de nivel
+    const xpForNextLevel = user.level * XP_PER_LEVEL;
+    if (user.xp >= xpForNextLevel) {
+      user.xp -= xpForNextLevel;
+      user.level++;
+      
+      // Mostrar modal de subida de nivel
+      showLevelUpModal(oldLevel);
+    }
+    
+    saveUser();
+    updateUI();
+  }
+  
+  function showLevelUpModal(oldLevel) {
+    const oldLeague = getLeagueByLevel(oldLevel);
+    const newLeague = getCurrentLeague();
+    
+    dom.levelUp.level.textContent = `Nivel ${user.level}`;
+    
+    // Comprobar si ha cambiado de liga
+    if (oldLeague.index !== newLeague.index) {
+      dom.levelUp.leagueMsg.classList.remove('hidden');
+      dom.levelUp.league.textContent = newLeague.name;
+      updateLeagueIcon(dom.levelUp.icon, newLeague.icon);
+    } else {
+      dom.levelUp.leagueMsg.classList.add('hidden');
+      updateLeagueIcon(dom.levelUp.icon, newLeague.icon);
+    }
+    
+    openModal(dom.modals.levelUp);
+  }
+  
+  // Funciones auxiliares
+  function getCurrentLeague() {
+    return getLeagueByLevel(user.level);
+  }
+  
+  function getLeagueByLevel(level) {
+    for (let i = 0; i < LEAGUES.length; i++) {
+      if (level >= LEAGUES[i].minLevel && level <= LEAGUES[i].maxLevel) {
+        return { ...LEAGUES[i], index: i };
+      }
+    }
+    return { ...LEAGUES[LEAGUES.length - 1], index: LEAGUES.length - 1 };
+  }
+  
+  function updateLeagueIcon(element, iconClass) {
+    element.innerHTML = `<i class="fas fa-${iconClass}"></i>`;
+  }
+  
+  function switchTab(tabId) {
+    // Activar pestaña
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+    
+    // Mostrar contenido
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.toggle('active', content.id === tabId);
+    });
+  }
+  
+  function openModal(modal) {
+    closeAllModals();
+    modal.classList.add('active');
+  }
+  
+  function closeModal(modal) {
+    modal.classList.remove('active');
+  }
+  
+  function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.classList.remove('active');
+    });
+  }
+  
+  function showNotification(message) {
+    dom.notificationText.textContent = message;
+    dom.notification.classList.add('show');
+    
+    setTimeout(() => {
+      dom.notification.classList.remove('show');
+    }, 3000);
+  }
+  
+  function showLoader() {
+    dom.loader.classList.remove('hidden');
+  }
+  
+  function hideLoader() {
+    dom.loader.classList.add('hidden');
+  }
+  
+  // Funciones de almacenamiento
+  function saveUser() {
+    localStorage.setItem(`${LS_PREFIX}user`, JSON.stringify(user));
+  }
+  
+  function loadUser() {
+    const data = localStorage.getItem(`${LS_PREFIX}user`);
+    return data ? JSON.parse(data) : null;
+  }
+});
